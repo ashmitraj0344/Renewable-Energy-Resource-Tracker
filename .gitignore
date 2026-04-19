@@ -1,0 +1,10 @@
+/node_modules
+/dist
+/.env
+/coverage
+/.vscode
+.DS_Store
+*.log
+*.tsbuildinfo
+# Ignore IDE specific files
+.idea/

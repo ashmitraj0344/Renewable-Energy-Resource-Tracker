@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | EcoTrack</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(135deg, #052e2b, #0f766e, #38bdf8); background-attachment: fixed;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: system-ui, sans-serif;
+    overflow: hidden;
+  }
+  #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .card {
+    position: relative; z-index: 1;
+    width: min(96vw, 860px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 0 80px rgba(6,200,160,0.15);
+  }
+  @media(max-width:600px) { .card { grid-template-columns: 1fr; } .slider-side { display: none; } }
+
+  .slider-side { position: relative; height: 520px; overflow: hidden; }
+  .slides { display: flex; height: 100%; transition: transform 0.8s cubic-bezier(.77,0,.18,1); }
+  .slides img { width: 100%; height: 100%; object-fit: cover; flex-shrink: 0; }
+  .slide-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(3, 20, 20,0.2) 0%, rgba(3, 20, 20,0.7) 100%);
+  }
+  .dots { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.3s; }
+  .dot.active { background: #22d3a5; width: 24px; border-radius: 4px; }
+  .carbon-badge {
+    position: absolute; top: 16px; left: 16px;
+    background: rgba(3, 20, 20,0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(34,211,165,0.4);
+    border-radius: 12px; padding: 10px 14px;
+    font-size: 11px; color: #6ee7b7; line-height: 1.5;
+  }
+  .carbon-badge span { font-size: 18px; font-weight: 600; color: #22d3a5; display: block; }
+  .tagline {
+    position: absolute; bottom: 52px; left: 0; right: 0;
+    text-align: center; font-size: 13px; color: rgba(255,255,255,0.75);
+    min-height: 20px; padding: 0 20px;
+  }
+
+  .login-side {
+    background: rgba(5, 46, 43,0.92);
+    backdrop-filter: blur(20px);
+    padding: 44px 36px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .brand { font-size: 11px; letter-spacing: 0.4em; color: #67e8f9; text-align: center; margin-bottom: 8px; text-transform: uppercase; }
+  .heading-pill {
+    display: block; text-align: center; font-size: 22px; font-weight: 600;
+    background: linear-gradient(90deg, #06b6d4, #a855f7, #ec4899);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px;
+  }
+  .subtitle { text-align: center; font-size: 13px; color: #f9a8d4; margin-bottom: 28px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 6px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .field input {
+    width: 100%; padding: 12px 16px; border-radius: 14px;
+    background: rgba(4, 25, 30,0.9); border: 1px solid rgba(100,116,139,0.4);
+    color: #e2e8f0; font-size: 14px; outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+  }
+  .field input:focus { border-color: #22d3a5; box-shadow: 0 0 0 3px rgba(34,211,165,0.15); }
+  .strength-bar { height: 4px; border-radius: 2px; background: rgba(100,116,139,0.25); margin-top: 8px; overflow: hidden; }
+  .strength-fill { height: 100%; border-radius: 2px; width: 0%; transition: width 0.4s, background 0.4s; }
+  .strength-label { font-size: 10px; margin-top: 4px; color: #64748b; }
+  .btn {
+    position: relative; overflow: hidden; width: 100%; padding: 13px;
+    border-radius: 14px; border: none;
+    background: linear-gradient(90deg, #06b6d4, #10b981);
+    color: #022c22; font-size: 15px; font-weight: 600;
+    cursor: pointer; margin-top: 6px;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(34,211,165,0.35); }
+  .btn:active { transform: scale(0.98); }
+  .ripple {
+    position: absolute; border-radius: 50%; background: rgba(255,255,255,0.3);
+    width: 20px; height: 20px; transform: scale(0);
+    animation: ripple-anim 0.6s linear; pointer-events: none;
+  }
+  @keyframes ripple-anim { to { transform: scale(20); opacity: 0; } }
+  .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+  .divider span { font-size: 12px; color: #64748b; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(100,116,139,0.25); }
+  .social-row { display: flex; gap: 10px; }
+  .social-btn {
+    flex: 1; padding: 10px; border-radius: 12px;
+    background: rgba(4, 25, 30,0.9); border: 1px solid rgba(100,116,139,0.35);
+    color: #94a3b8; font-size: 13px; cursor: pointer; text-align: center;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .social-btn:hover { border-color: #22d3a5; color: #22d3a5; }
+  .footer { text-align: center; margin-top: 20px; font-size: 13px; color: #64748b; }
+  .footer a { color: #67e8f9; text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+  .eco-tip {
+    margin-top: 18px; padding: 10px 14px; border-radius: 12px;
+    background: rgba(34,211,165,0.07); border: 1px solid rgba(34,211,165,0.2);
+    font-size: 12px; color: #6ee7b7; display: flex; align-items: flex-start; gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<div class="card">
+  <div class="slider-side">
+    <div class="slides" id="slides">
+      <img src="https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=600&q=80" alt="">
+      <img src="https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=600&q=80" alt="">
+      <img src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=600&q=80" alt="">
+      <img src="https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=600&q=80" alt="">
+    </div>
+    <div class="slide-overlay"></div>
+    <div class="carbon-badge">CO₂ saved today<span id="co2">0 kg</span></div>
+    <div class="tagline" id="tagline"></div>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div class="login-side">
+    <p class="brand">EcoTrack</p>
+    <span class="heading-pill">Welcome back</span>
+    <p class="subtitle">Login to your dashboard</p>
+    <div id="error-msg" class="hidden" style="color: #ef4444; font-size: 13px; text-align: center; margin-bottom: 15px;"></div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="passInput" placeholder="••••••••">
+      <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+      <div class="strength-label" id="strengthLabel">Enter password to check strength</div>
+    </div>
+    <button class="btn" id="loginBtn">Login</button>
+    <div class="divider"><span>or continue with</span></div>
+    <div class="social-row">
+      <button class="social-btn">Google</button>
+      <button class="social-btn">GitHub</button>
+    </div>
+    <div class="eco-tip">🌿 <span id="ecoTip">This server runs on 100% renewable energy.</span></div>
+    <p class="footer">Don't have an account? <a href="#">Sign up</a></p>
+  </div>
+</div>
+
+<script>
+  // Particles
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  canvas.width = innerWidth; canvas.height = innerHeight;
+  const orbs = Array.from({length:28}, () => ({
+    x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+    r: 2+Math.random()*4, vx: (Math.random()-.5)*.4, vy: (Math.random()-.5)*.4,
+    alpha: .15+Math.random()*.25, hue: Math.random()>.5?'34,211,165':'103,232,249'
+  }));
+  function animParticles() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    orbs.forEach(o => {
+      o.x+=o.vx; o.y+=o.vy;
+      if(o.x<0||o.x>canvas.width) o.vx*=-1;
+      if(o.y<0||o.y>canvas.height) o.vy*=-1;
+      ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${o.hue},${o.alpha})`; ctx.fill();
+    });
+    requestAnimationFrame(animParticles);
+  }
+  animParticles();
+  window.addEventListener('resize', () => { canvas.width=innerWidth; canvas.height=innerHeight; });
+
+  // Slider
+  const slides = document.getElementById('slides');
+  const dotsEl = document.getElementById('dots');
+  const total = slides.children.length;
+  let idx = 0;
+  for(let i=0;i<total;i++){
+    const d = document.createElement('div');
+    d.className = 'dot'+(i===0?' active':'');
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  }
+  function goTo(n) {
+    idx=n; slides.style.transform=`translateX(-${idx*100}%)`;
+    document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+  }
+  setInterval(()=>goTo((idx+1)%total), 4500);
+
+  // CO2 counter
+  let co2=0;
+  const co2El=document.getElementById('co2');
+  setInterval(()=>{ co2+=Math.random()*.8+.3; co2El.textContent=co2.toFixed(1)+' kg'; }, 1200);
+
+  // Typewriter
+  const lines=['Track your carbon footprint daily.','Every action counts for the planet.','Join 2M+ eco-conscious users.','Make sustainability your habit.'];
+  let li=0,ci=0,del=false;
+  const tagEl=document.getElementById('tagline');
+  function typewriter(){
+    const txt=lines[li];
+    if(!del){ tagEl.textContent=txt.slice(0,++ci); if(ci===txt.length){del=true;setTimeout(typewriter,1800);return;} }
+    else { tagEl.textContent=txt.slice(0,--ci); if(ci===0){del=false;li=(li+1)%lines.length;} }
+    setTimeout(typewriter,del?35:65);
+  }
+  typewriter();
+
+  // Password strength
+  document.getElementById('passInput').addEventListener('input', function() {
+    const v=this.value, fill=document.getElementById('strengthFill'), label=document.getElementById('strengthLabel');
+    let score=0;
+    if(v.length>=8) score++; if(/[A-Z]/.test(v)) score++; if(/[0-9]/.test(v)) score++; if(/[^A-Za-z0-9]/.test(v)) score++;
+    fill.style.width=['0%','25%','50%','75%','100%'][score];
+    fill.style.background=['','#ef4444','#f97316','#eab308','#22d3a5'][score]||'';
+    label.textContent=score?['','Weak','Fair','Good','Strong'][score]+' password':'Enter password to check strength';
+    label.style.color=['','#ef4444','#f97316','#eab308','#22d3a5'][score]||'#64748b';
+  });
+
+  // Ripple
+  document.getElementById('loginBtn').addEventListener('click', async function(e) {
+    const btn = this;
+    const r=document.createElement('span'); r.className='ripple';
+    const rect=btn.getBoundingClientRect();
+    r.style.left=(e.clientX-rect.left-10)+'px'; r.style.top=(e.clientY-rect.top-10)+'px';
+    btn.appendChild(r); setTimeout(()=>r.remove(),700);
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('passInput').value;
+    const errorMsg = document.getElementById('error-msg');
+    
+    if(!email || !password) {
+      errorMsg.innerText = 'Please enter email and password';
+      errorMsg.classList.remove('hidden');
+      return;
+    }
+
+    btn.textContent='Loading...'; btn.style.pointerEvents='none';
+    
+    try {
+      const res = await fetch('http://localhost:1000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        sessionStorage.setItem('ecoUser', JSON.stringify(data.user));
+        window.location.href = 'dashboard.html';
+      } else {
+        errorMsg.innerText = data.error || 'Login failed';
+        errorMsg.classList.remove('hidden');
+        btn.textContent='Login'; btn.style.pointerEvents='auto';
+      }
+    } catch (err) {
+      errorMsg.innerText = 'Server error occurred';
+      errorMsg.classList.remove('hidden');
+      btn.textContent='Login'; btn.style.pointerEvents='auto';
+    }
+  });
+
+  // Eco tips
+  const tips=['This server runs on 100% renewable energy.','Logging in from a laptop uses 5x less energy than a desktop.','EcoTrack has offset 1,200 tonnes of CO₂ this year.','Dark mode saves up to 30% battery on OLED screens.'];
+  let ti=0; const tipEl=document.getElementById('ecoTip');
+  setInterval(()=>{ tipEl.style.transition='opacity 0.4s'; tipEl.style.opacity=0; setTimeout(()=>{ tipEl.textContent=tips[++ti%tips.length]; tipEl.style.opacity=1; },400); },5000);
+</script>
+<script src="js/app.js"></script>
+</body>
+</html>

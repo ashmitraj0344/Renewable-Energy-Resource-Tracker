@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment | EcoTrack</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: linear-gradient(135deg, #052e2b, #0f766e, #38bdf8); background-attachment: fixed;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, sans-serif;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    /* Animated background canvas */
+    #bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    .card {
+      position: relative; z-index: 1;
+      width: min(100%, 460px);
+      background: rgba(5, 46, 43,0.95);
+      border: 1px solid rgba(100,116,139,0.25);
+      border-radius: 28px;
+      padding: 36px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 40px 100px rgba(0,0,0,0.4);
+    }
+
+    /* Header */
+    .brand { font-size: 10px; letter-spacing: 0.45em; color: #67e8f9; text-transform: uppercase; text-align: center; margin-bottom: 6px; }
+    .title { font-size: 24px; font-weight: 700; text-align: center; color: #fff; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #64748b; text-align: center; margin-bottom: 28px; }
+
+    /* Security badge */
+    .sec-badge {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 11px; color: #22d3a5; margin-bottom: 20px;
+    }
+    .sec-dot { width: 7px; height: 7px; border-radius: 50%; background: #22d3a5; animation: pulse 1.8s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+
+    /* Summary box */
+    .summary {
+      background: rgba(4, 25, 30,0.9);
+      border: 1px solid rgba(100,116,139,0.2);
+      border-radius: 18px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+    .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 13px; color: #94a3b8; }
+    .summary-row strong { color: #e2e8f0; font-weight: 600; }
+    .summary-divider { height: 1px; background: rgba(100,116,139,0.2); margin: 10px 0; }
+    .summary-total { display: flex; justify-content: space-between; align-items: center; }
+    .summary-total span { font-size: 14px; color: #94a3b8; }
+    .summary-total strong { font-size: 22px; font-weight: 700; color: #22d3a5; }
+
+    /* CO2 impact pill */
+    .impact-pill {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(34,211,165,0.08);
+      border: 1px solid rgba(34,211,165,0.25);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+      font-size: 12px; color: #6ee7b7;
+    }
+    .impact-pill .leaf { font-size: 16px; }
+    .impact-pill span { flex: 1; }
+    .impact-pill b { color: #22d3a5; }
+
+    /* Payment method tabs */
+    .pay-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .pay-tab {
+      flex: 1; padding: 10px 6px; border-radius: 12px;
+      background: rgba(4, 25, 30,0.9);
+      border: 1px solid rgba(100,116,139,0.25);
+      color: #64748b; font-size: 12px; font-weight: 600;
+      cursor: pointer; text-align: center;
+      transition: all 0.2s;
+    }
+    .pay-tab.active { background: rgba(34,211,165,0.1); border-color: #22d3a5; color: #22d3a5; }
+    .pay-tab:hover:not(.active) { border-color: rgba(100,116,139,0.5); color: #94a3b8; }
+
+    /* UPI input */
+    .upi-wrap { position: relative; margin-bottom: 16px; }
+    .upi-wrap input {
+      width: 100%; padding: 13px 16px 13px 44px;
+      border-radius: 14px;
+      background: rgba(4, 25, 30,0.9);
+      border: 1px solid rgba(100,116,139,0.3);
+      color: #e2e8f0; font-size: 14px; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .upi-wrap input:focus { border-color: #22d3a5; box-shadow: 0 0 0 3px rgba(34,211,165,0.12); }
+    .upi-wrap .icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; }
+
+    /* Card fields */
+    .card-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .card-fields input, .field-full input {
+      width: 100%; padding: 13px 16px;
+      border-radius: 14px;
+      background: rgba(4, 25, 30,0.9);
+      border: 1px solid rgba(100,116,139,0.3);
+      color: #e2e8f0; font-size: 14px; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card-fields input:focus, .field-full input:focus { border-color: #22d3a5; box-shadow: 0 0 0 3px rgba(34,211,165,0.12); }
+    .field-full { margin-bottom: 10px; }
+
+    /* Progress steps */
+    .steps { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 24px; }
+    .step { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; transition: all 0.3s; }
+    .step-dot.done { background: #22d3a5; color: #022c22; }
+    .step-dot.active { background: rgba(34,211,165,0.15); border: 2px solid #22d3a5; color: #22d3a5; }
+    .step-dot.pending { background: rgba(100,116,139,0.15); color: #64748b; }
+    .step-label { font-size: 10px; color: #64748b; white-space: nowrap; }
+    .step-line { width: 40px; height: 1px; background: rgba(100,116,139,0.25); margin-bottom: 16px; }
+    .step-line.done { background: #22d3a5; }
+
+    /* Buttons */
+    .btn-row { display: flex; gap: 10px; margin-top: 6px; }
+    .btn-cancel {
+      flex: 1; padding: 13px;
+      border-radius: 14px;
+      background: rgba(4, 25, 30,0.9);
+      border: 1px solid rgba(100,116,139,0.3);
+      color: #94a3b8; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-cancel:hover { border-color: #ef4444; color: #f87171; }
+    .btn-pay {
+      flex: 2; padding: 13px;
+      border-radius: 14px; border: none;
+      background: linear-gradient(90deg, #06b6d4, #10b981);
+      color: #022c22; font-size: 15px; font-weight: 700;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+    .btn-pay:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(34,211,165,0.3); }
+    .btn-pay:active { transform: scale(0.98); }
+
+    /* Ripple */
+    .ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.3); width: 20px; height: 20px; transform: scale(0); animation: rpl 0.6s linear; pointer-events: none; }
+    @keyframes rpl { to { transform: scale(20); opacity: 0; } }
+
+    /* Countdown timer */
+    .timer-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 14px; font-size: 12px; color: #64748b; }
+    .timer-val { color: #f59e0b; font-weight: 600; font-size: 13px; }
+
+    /* Success overlay */
+    .success-screen {
+      display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 20px 0;
+    }
+    .success-circle {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(34,211,165,0.12);
+      border: 2px solid #22d3a5;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin-bottom: 16px;
+      animation: pop 0.4s cubic-bezier(.36,.07,.19,.97);
+    }
+    @keyframes pop { 0%{transform:scale(0)} 80%{transform:scale(1.15)} 100%{transform:scale(1)} }
+    .success-title { font-size: 20px; font-weight: 700; color: #22d3a5; margin-bottom: 6px; }
+    .success-sub { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+    .tx-id { font-size: 11px; color: #475569; background: rgba(4, 25, 30,0.9); padding: 8px 16px; border-radius: 8px; }
+
+    /* Netbanking list */
+    .bank-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .bank-item {
+      padding: 10px 12px; border-radius: 12px;
+      background: rgba(4, 25, 30,0.9);
+      border: 1px solid rgba(100,116,139,0.25);
+      color: #94a3b8; font-size: 12px; font-weight: 600;
+      cursor: pointer; text-align: center;
+      transition: all 0.2s;
+    }
+    .bank-item:hover, .bank-item.selected { border-color: #22d3a5; color: #22d3a5; background: rgba(34,211,165,0.07); }
+  </style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="card" id="mainCard">
+
+  <!-- Progress Steps -->
+  <div class="steps">
+    <div class="step">
+      <div class="step-dot done">✓</div>
+      <div class="step-label">Cart</div>
+    </div>
+    <div class="step-line done"></div>
+    <div class="step">
+      <div class="step-dot done">✓</div>
+      <div class="step-label">Details</div>
+    </div>
+    <div class="step-line done"></div>
+    <div class="step">
+      <div class="step-dot active">3</div>
+      <div class="step-label">Payment</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step">
+      <div class="step-dot pending">4</div>
+      <div class="step-label">Done</div>
+    </div>
+  </div>
+
+  <p class="brand">EcoTrack</p>
+  <h2 class="title">Confirm Investment</h2>
+  <p class="subtitle">Complete your project funding securely.</p>
+
+  <!-- Live secure badge -->
+  <div class="sec-badge">
+    <div class="sec-dot"></div>
+    256-bit SSL encrypted · Secured payment
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="summary-row"><span>Project</span><strong id="pay-project-name">Solar Farm Alpha</strong></div>
+    <div class="summary-row"><span>Energy Type</span><strong id="pay-project-type">SOLAR</strong></div>
+    <div class="summary-row"><span>Platform Fee (2%)</span><strong id="fee-amt">₹200</strong></div>
+    <div class="summary-divider"></div>
+    <div class="summary-total">
+      <span>Total Investment</span>
+      <strong>₹<span id="pay-amount">10,200</span></strong>
+    </div>
+  </div>
+
+  <!-- Eco impact -->
+  <div class="impact-pill">
+    <span class="leaf">🌿</span>
+    <span>This investment offsets <b id="co2val">4.2</b> tonnes of CO₂/year</span>
+  </div>
+
+  <!-- Main form area -->
+  <div id="formArea">
+    <!-- Payment tabs -->
+    <div class="pay-tabs">
+      <div class="pay-tab active" onclick="switchTab('upi',this)">UPI</div>
+      <div class="pay-tab" onclick="switchTab('card',this)">Card</div>
+      <div class="pay-tab" onclick="switchTab('net',this)">Netbanking</div>
+    </div>
+
+    <!-- UPI panel -->
+    <div id="panel-upi">
+      <div class="upi-wrap">
+        <span class="icon">@</span>
+        <input type="text" placeholder="yourname@upi" id="upiId">
+      </div>
+    </div>
+
+    <!-- Card panel -->
+    <div id="panel-card" style="display:none;">
+      <div class="field-full"><input type="text" placeholder="Card number" maxlength="19" id="cardNum"></div>
+      <div class="card-fields">
+        <input type="text" placeholder="MM / YY" maxlength="7" id="cardExp">
+        <input type="text" placeholder="CVV" maxlength="3" id="cardCvv" type="password">
+      </div>
+      <div class="field-full"><input type="text" placeholder="Cardholder name"></div>
+    </div>
+
+    <!-- Netbanking panel -->
+    <div id="panel-net" style="display:none;">
+      <div class="bank-list" id="bankList">
+        <div class="bank-item" onclick="selectBank(this)">SBI</div>
+        <div class="bank-item" onclick="selectBank(this)">HDFC</div>
+        <div class="bank-item" onclick="selectBank(this)">ICICI</div>
+        <div class="bank-item" onclick="selectBank(this)">Axis</div>
+        <div class="bank-item" onclick="selectBank(this)">Kotak</div>
+        <div class="bank-item" onclick="selectBank(this)">PNB</div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-row">
+      <button class="btn-cancel" id="cancelBtn">Cancel</button>
+      <button class="btn-pay" id="payBtn" onclick="handlePay(event)">Pay Now ₹<span id="btnAmt">10,200</span></button>
+    </div>
+
+    <!-- Session timer -->
+    <div class="timer-row">
+      🔒 Session expires in <span class="timer-val" id="timerVal">09:59</span>
+    </div>
+  </div>
+
+  <!-- Success screen -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-circle">✓</div>
+    <div class="success-title">Payment Successful!</div>
+    <div class="success-sub">Your investment is confirmed. Welcome to a greener future.</div>
+    <div class="tx-id">TXN ID: ECO-<span id="txnId"></span></div>
+  </div>
+
+</div>
+
+<script>
+  // Particle background
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d');
+  canvas.width = innerWidth; canvas.height = innerHeight;
+  const orbs = Array.from({length:22},()=>({
+    x:Math.random()*canvas.width, y:Math.random()*canvas.height,
+    r:1.5+Math.random()*3.5, vx:(Math.random()-.5)*.35, vy:(Math.random()-.5)*.35,
+    alpha:.1+Math.random()*.2, hue:Math.random()>.5?'34,211,165':'103,232,249'
+  }));
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    orbs.forEach(o=>{
+      o.x+=o.vx; o.y+=o.vy;
+      if(o.x<0||o.x>canvas.width)o.vx*=-1;
+      if(o.y<0||o.y>canvas.height)o.vy*=-1;
+      ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${o.hue},${o.alpha})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+  window.addEventListener('resize',()=>{canvas.width=innerWidth;canvas.height=innerHeight;});
+
+  // Tab switching
+  function switchTab(name, el) {
+    document.querySelectorAll('.pay-tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    ['upi','card','net'].forEach(p=>{ document.getElementById('panel-'+p).style.display = p===name?'block':'none'; });
+  }
+
+  // Bank selection
+  function selectBank(el) {
+    document.querySelectorAll('.bank-item').forEach(b=>b.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  // Card number formatting
+  document.getElementById('cardNum').addEventListener('input',function(){
+    let v=this.value.replace(/\D/g,'').substring(0,16);
+    this.value=v.replace(/(.{4})/g,'$1 ').trim();
+  });
+
+  // Expiry formatting
+  document.getElementById('cardExp').addEventListener('input',function(){
+    let v=this.value.replace(/\D/g,'');
+    if(v.length>=2) v=v.substring(0,2)+' / '+v.substring(2,4);
+    this.value=v;
+  });
+
+  // Countdown timer
+  let secs = 599;
+  const timerEl = document.getElementById('timerVal');
+  const timerInterval = setInterval(()=>{
+    secs--;
+    if(secs<=0){ clearInterval(timerInterval); timerEl.textContent='00:00'; timerEl.style.color='#ef4444'; return; }
+    const m = String(Math.floor(secs/60)).padStart(2,'0');
+    const s = String(secs%60).padStart(2,'0');
+    timerEl.textContent = `${m}:${s}`;
+    if(secs<=60) timerEl.style.color='#ef4444';
+  },1000);
+
+  // CO2 counter animation
+  let co2 = 0, target = 4.2;
+  const co2El = document.getElementById('co2val');
+  const co2Interval = setInterval(()=>{
+    co2 = Math.min(co2+0.1, target);
+    co2El.textContent = co2.toFixed(1);
+    if(co2>=target) clearInterval(co2Interval);
+  }, 40);
+
+  // Pay button ripple + success
+  function handlePay(e){
+    const btn = document.getElementById('payBtn');
+    const r = document.createElement('span');
+    r.className='ripple';
+    const rect=btn.getBoundingClientRect();
+    r.style.left=(e.clientX-rect.left-10)+'px';
+    r.style.top=(e.clientY-rect.top-10)+'px';
+    btn.appendChild(r);
+    setTimeout(()=>r.remove(),700);
+
+    btn.textContent='Processing...';
+    btn.style.opacity='0.7';
+    btn.style.pointerEvents='none';
+
+    setTimeout(()=>{
+      document.getElementById('formArea').style.display='none';
+      const ss = document.getElementById('successScreen');
+      ss.style.display='flex';
+      document.getElementById('txnId').textContent = Math.random().toString(36).substring(2,10).toUpperCase();
+      clearInterval(timerInterval);
+    }, 1800);
+  }
+
+  // Fee calculation (demo values)
+  const base = 10000;
+  const fee = Math.round(base * 0.02);
+  const total = base + fee;
+  document.getElementById('fee-amt').textContent = '₹' + fee.toLocaleString('en-IN');
+  document.getElementById('pay-amount').textContent = total.toLocaleString('en-IN');
+  document.getElementById('btnAmt').textContent = total.toLocaleString('en-IN');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EcoTrack | Renewable Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-[#052e2b] via-[#0f766e] to-[#38bdf8] text-white font-sans min-h-screen flex items-center justify-center">
+
+  <!-- Background Glow -->
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute w-[500px] h-[500px] bg-emerald-500/20 blur-[120px] top-[-100px] left-[-100px] rounded-full"></div>
+    <div class="absolute w-[400px] h-[400px] bg-cyan-400/20 blur-[100px] bottom-[-100px] right-[-100px] rounded-full"></div>
+  </div>
+
+  <!-- Main Card -->
+  <div class="relative z-10 w-full max-w-3xl bg-[#032020]/90 backdrop-blur-xl border border-slate-700 rounded-[2rem] p-12 text-center shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
+
+    <!-- Logo -->
+    <div class="flex justify-center items-center gap-2 mb-4">
+      <div class="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+      <span class="text-emerald-400 font-bold text-lg tracking-wide">EcoTrack</span>
+    </div>
+
+    <!-- Heading -->
+    <h1 class="text-5xl font-extrabold text-white mb-4 tracking-tight">
+      Renewable Energy Intelligence
+    </h1>
+
+    <!-- Description -->
+    <p class="mx-auto max-w-xl text-lg text-slate-400">
+      Connecting providers, communities, and smart renewable projects through a clean and modern dashboard.
+    </p>
+
+    <!-- Buttons -->
+    <div class="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
+
+      <!-- Login -->
+      <a href="login.html"
+        class="inline-flex justify-center rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 px-8 py-4 text-sm font-semibold text-[#022c22] shadow-lg transition hover:scale-[1.05] hover:shadow-emerald-400/30">
+        Login
+      </a>
+
+      <!-- Register -->
+      <a href="register.html"
+        class="inline-flex justify-center rounded-full border border-slate-600 bg-[#052e2b] px-8 py-4 text-sm font-semibold text-cyan-300 transition hover:bg-slate-800 hover:scale-[1.05]">
+        Register
+      </a>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

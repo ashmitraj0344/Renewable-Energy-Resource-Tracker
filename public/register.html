@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register | EcoTrack</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: linear-gradient(135deg, #052e2b, #0f766e, #38bdf8); background-attachment: fixed;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, sans-serif;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    #bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    .wrapper {
+      position: relative; z-index: 1;
+      width: min(100%, 960px);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+    }
+    @media(max-width:700px) { .wrapper { grid-template-columns: 1fr; } .left-panel { display: none; } }
+
+    /* LEFT PANEL */
+    .left-panel {
+      position: relative;
+      background: #07111f;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 32px;
+      overflow: hidden;
+      min-height: 600px;
+    }
+    .left-panel img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; opacity: 0.35;
+    }
+    .left-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(3, 20, 20,0.1) 0%, rgba(3, 20, 20,0.85) 100%);
+    }
+    .left-content { position: relative; z-index: 1; }
+    .left-tag { font-size: 10px; letter-spacing: 0.4em; color: #22d3a5; text-transform: uppercase; margin-bottom: 10px; }
+    .left-title { font-size: 26px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 12px; }
+    .left-desc { font-size: 13px; color: #94a3b8; line-height: 1.7; margin-bottom: 20px; }
+
+    .stats-row { display: flex; gap: 16px; }
+    .stat-box {
+      flex: 1; background: rgba(34,211,165,0.08);
+      border: 1px solid rgba(34,211,165,0.2);
+      border-radius: 14px; padding: 12px 14px;
+    }
+    .stat-num { font-size: 20px; font-weight: 700; color: #22d3a5; }
+    .stat-label { font-size: 10px; color: #64748b; margin-top: 2px; }
+
+    .planet-ring {
+      position: absolute; top: 30px; right: -40px;
+      width: 200px; height: 200px; border-radius: 50%;
+      border: 1px solid rgba(34,211,165,0.15);
+      animation: spin 20s linear infinite;
+    }
+    .planet-ring::after {
+      content: '';
+      position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px;
+      border-radius: 50%;
+      border: 1px solid rgba(103,232,249,0.1);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* RIGHT PANEL — FORM */
+    .right-panel {
+      background: rgba(5, 46, 43,0.97);
+      padding: 36px 32px;
+      display: flex; flex-direction: column; justify-content: center;
+      overflow-y: auto;
+    }
+
+    .brand { font-size: 10px; letter-spacing: 0.45em; color: #67e8f9; text-transform: uppercase; text-align: center; margin-bottom: 6px; }
+    .form-title {
+      font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 4px;
+      background: linear-gradient(90deg, #06b6d4, #a855f7, #ec4899);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .form-sub { font-size: 12px; color: #64748b; text-align: center; margin-bottom: 22px; }
+
+    /* Step indicator */
+    .stepper { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 24px; }
+    .s-dot {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; cursor: pointer;
+      transition: all 0.3s;
+    }
+    .s-dot.active { background: #22d3a5; color: #022c22; }
+    .s-dot.done { background: rgba(34,211,165,0.15); border: 2px solid #22d3a5; color: #22d3a5; }
+    .s-dot.idle { background: rgba(100,116,139,0.15); color: #64748b; }
+    .s-line { width: 36px; height: 1px; background: rgba(100,116,139,0.25); }
+    .s-line.done { background: #22d3a5; }
+
+    /* Steps */
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 10px; color: #94a3b8; margin-bottom: 6px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .field input, .field select {
+      width: 100%; padding: 12px 16px;
+      border-radius: 13px;
+      background: rgba(4, 25, 30,0.95);
+      border: 1px solid rgba(100,116,139,0.3);
+      color: #e2e8f0; font-size: 14px; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+    }
+    .field input:focus, .field select:focus {
+      border-color: #22d3a5;
+      box-shadow: 0 0 0 3px rgba(34,211,165,0.12);
+    }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* Password wrapper */
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 48px; }
+    .pw-toggle {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      font-size: 12px; color: #22d3a5; cursor: pointer; user-select: none;
+      background: none; border: none; padding: 0;
+    }
+
+    /* Strength */
+    .strength-bar { height: 4px; border-radius: 2px; background: rgba(100,116,139,0.2); margin-top: 8px; overflow: hidden; }
+    .strength-fill { height: 100%; border-radius: 2px; width: 0; transition: width 0.4s, background 0.4s; }
+    .strength-text { font-size: 10px; margin-top: 4px; color: #64748b; }
+
+    /* Role cards */
+    .role-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+    .role-card {
+      padding: 12px 8px; border-radius: 13px; text-align: center;
+      background: rgba(4, 25, 30,0.95);
+      border: 1px solid rgba(100,116,139,0.25);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .role-card .r-icon { font-size: 20px; margin-bottom: 4px; }
+    .role-card .r-label { font-size: 10px; color: #64748b; font-weight: 600; }
+    .role-card.selected { border-color: #22d3a5; background: rgba(34,211,165,0.08); }
+    .role-card.selected .r-label { color: #22d3a5; }
+
+    /* Avatar upload */
+    .avatar-zone {
+      border: 2px dashed rgba(100,116,139,0.3);
+      border-radius: 14px; padding: 20px;
+      text-align: center; cursor: pointer;
+      transition: border-color 0.2s;
+      margin-bottom: 14px;
+    }
+    .avatar-zone:hover { border-color: #22d3a5; }
+    .avatar-zone .az-icon { font-size: 28px; margin-bottom: 6px; }
+    .avatar-zone p { font-size: 12px; color: #64748b; }
+    .avatar-zone span { font-size: 11px; color: #22d3a5; }
+
+    /* OTP boxes */
+    .otp-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 14px; }
+    .otp-box {
+      width: 44px; height: 52px;
+      border-radius: 12px;
+      background: rgba(4, 25, 30,0.95);
+      border: 1px solid rgba(100,116,139,0.3);
+      color: #e2e8f0; font-size: 20px; font-weight: 700;
+      text-align: center; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .otp-box:focus { border-color: #22d3a5; box-shadow: 0 0 0 3px rgba(34,211,165,0.12); }
+
+    /* Terms */
+    .terms-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; font-size: 12px; color: #64748b; }
+    .terms-row input[type=checkbox] { margin-top: 2px; accent-color: #22d3a5; }
+    .terms-row a { color: #67e8f9; }
+
+    /* Nav buttons */
+    .btn-row { display: flex; gap: 10px; margin-top: 4px; }
+    .btn-back {
+      flex: 1; padding: 12px;
+      border-radius: 13px;
+      background: rgba(4, 25, 30,0.95);
+      border: 1px solid rgba(100,116,139,0.3);
+      color: #94a3b8; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-back:hover { border-color: #64748b; color: #e2e8f0; }
+    .btn-next {
+      flex: 2; padding: 12px;
+      border-radius: 13px; border: none;
+      background: linear-gradient(90deg, #06b6d4, #10b981);
+      color: #022c22; font-size: 14px; font-weight: 700;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+    .btn-next:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(34,211,165,0.3); }
+    .btn-next:active { transform: scale(0.98); }
+    .ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.3); width: 20px; height: 20px; transform: scale(0); animation: rpl 0.6s linear; pointer-events: none; }
+    @keyframes rpl { to { transform: scale(20); opacity: 0; } }
+
+    .footer-link { text-align: center; margin-top: 16px; font-size: 12px; color: #64748b; }
+    .footer-link a { color: #67e8f9; }
+
+    /* Success */
+    .success-screen {
+      display: none; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center; padding: 20px 0;
+    }
+    .success-circle {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: rgba(34,211,165,0.1); border: 2px solid #22d3a5;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; margin-bottom: 16px;
+      animation: pop 0.4s cubic-bezier(.36,.07,.19,.97);
+    }
+    @keyframes pop { 0%{transform:scale(0)} 80%{transform:scale(1.2)} 100%{transform:scale(1)} }
+    .success-title { font-size: 20px; font-weight: 700; color: #22d3a5; margin-bottom: 6px; }
+    .success-sub { font-size: 13px; color: #64748b; }
+
+    /* ECO tip */
+    .eco-tip {
+      display: flex; align-items: flex-start; gap: 8px;
+      background: rgba(34,211,165,0.06);
+      border: 1px solid rgba(34,211,165,0.18);
+      border-radius: 12px; padding: 10px 12px;
+      font-size: 11px; color: #6ee7b7; margin-bottom: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="wrapper">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <img src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=700&q=80" alt="">
+    <div class="left-overlay"></div>
+    <div class="planet-ring"></div>
+    <div class="left-content">
+      <p class="left-tag">EcoTrack Platform</p>
+      <h2 class="left-title">Join the Green<br>Energy Revolution</h2>
+      <p class="left-desc">Track, invest, and grow with sustainable energy projects across India. Be part of the change.</p>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num" id="userCount">0</div>
+          <div class="stat-label">Active Users</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="co2Count">0</div>
+          <div class="stat-label">Tonnes CO₂ Saved</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="projCount">0</div>
+          <div class="stat-label">Projects Funded</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <p class="brand">EcoTrack</p>
+    <h2 class="form-title">Create Account</h2>
+    <p class="form-sub">Join thousands building a cleaner future</p>
+
+    <!-- Stepper -->
+    <div class="stepper" id="stepper">
+      <div class="s-dot active" id="sd1">1</div>
+      <div class="s-line" id="sl1"></div>
+      <div class="s-dot idle" id="sd2">2</div>
+      <div class="s-line" id="sl2"></div>
+      <div class="s-dot idle" id="sd3">3</div>
+      <div class="s-line" id="sl3"></div>
+      <div class="s-dot idle" id="sd4">4</div>
+    </div>
+
+    <!-- STEP 1: Basic Info -->
+    <div class="step-panel active" id="step1">
+      <div class="field-row">
+        <div class="field">
+          <label>First Name</label>
+          <input type="text" placeholder="Aryan" id="fname">
+        </div>
+        <div class="field">
+          <label>Last Name</label>
+          <input type="text" placeholder="Sharma" id="lname">
+        </div>
+      </div>
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" placeholder="you@example.com" id="email">
+      </div>
+      <div class="field">
+        <label>Phone Number</label>
+        <input type="tel" placeholder="+91 98765 43210" id="phone">
+      </div>
+      <div class="btn-row">
+        <button class="btn-next" onclick="nextStep(1,event)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Role + Password -->
+    <div class="step-panel" id="step2">
+      <div class="eco-tip">🌱 Your role determines what projects you can manage on the platform.</div>
+      <p style="font-size:11px;color:#94a3b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em;">Select your role</p>
+      <div class="role-cards">
+        <div class="role-card" onclick="selectRole(this)">
+          <div class="r-icon">⚡</div>
+          <div class="r-label">Energy Provider</div>
+        </div>
+        <div class="role-card" onclick="selectRole(this)">
+          <div class="r-icon">🏘️</div>
+          <div class="r-label">Community Leader</div>
+        </div>
+        <div class="role-card" onclick="selectRole(this)">
+          <div class="r-icon">🛡️</div>
+          <div class="r-label">System Admin</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" placeholder="Min 8 chars" id="password">
+          <button class="pw-toggle" onclick="togglePw()">Show</button>
+        </div>
+        <div class="strength-bar"><div class="strength-fill" id="sFill"></div></div>
+        <div class="strength-text" id="sText">Enter password</div>
+      </div>
+      <div class="field">
+        <label>Confirm Password</label>
+        <input type="password" placeholder="Re-enter password" id="confirmPw">
+      </div>
+      <div class="btn-row">
+        <button class="btn-back" onclick="prevStep(2)">← Back</button>
+        <button class="btn-next" onclick="nextStep(2,event)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Profile + Location -->
+    <div class="step-panel" id="step3">
+      <div class="avatar-zone" onclick="document.getElementById('avatarInput').click()">
+        <div class="az-icon" id="azIcon">📷</div>
+        <p>Upload profile photo</p>
+        <span>Click to browse</span>
+        <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+      </div>
+      <div class="field">
+        <label>Location / City</label>
+        <input type="text" placeholder="Mumbai, Maharashtra" id="location">
+      </div>
+      <div class="field">
+        <label>Organization (optional)</label>
+        <input type="text" placeholder="Green Energy Pvt. Ltd.">
+      </div>
+      <div class="field">
+        <label>Bio (optional)</label>
+        <input type="text" placeholder="Tell us about yourself">
+      </div>
+      <div class="btn-row">
+        <button class="btn-back" onclick="prevStep(3)">← Back</button>
+        <button class="btn-next" onclick="nextStep(3,event)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: OTP Verify -->
+    <div class="step-panel" id="step4">
+      <div class="eco-tip">📧 We sent a 6-digit OTP to your email. Check your inbox.</div>
+      <div class="otp-row" id="otpRow">
+        <input class="otp-box" maxlength="1" type="text">
+        <input class="otp-box" maxlength="1" type="text">
+        <input class="otp-box" maxlength="1" type="text">
+        <input class="otp-box" maxlength="1" type="text">
+        <input class="otp-box" maxlength="1" type="text">
+        <input class="otp-box" maxlength="1" type="text">
+      </div>
+      <p style="font-size:11px;color:#64748b;text-align:center;margin-bottom:14px;">
+        Didn't receive? <span style="color:#22d3a5;cursor:pointer" onclick="resendOtp()">Resend OTP</span>
+        <span id="resendTimer" style="color:#f59e0b;margin-left:6px;"></span>
+      </p>
+      <div class="terms-row">
+        <input type="checkbox" id="terms">
+        <label for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+      </div>
+      <div class="btn-row">
+        <button class="btn-back" onclick="prevStep(4)">← Back</button>
+        <button class="btn-next" onclick="register(event)">Register 🌿</button>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-circle">✓</div>
+      <div class="success-title">Welcome to EcoTrack!</div>
+      <div class="success-sub" style="margin-bottom:16px">Your account is ready. Start your green journey.</div>
+      <div style="font-size:11px;color:#475569;background:rgba(4, 25, 30,0.9);padding:8px 16px;border-radius:8px;">
+        Account ID: ECO-<span id="accId"></span>
+      </div>
+    </div>
+
+    <p class="footer-link">Already have an account? <a href="login.html">Login</a></p>
+  </div>
+</div>
+
+<script>
+  // Particles
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d');
+  canvas.width = innerWidth; canvas.height = innerHeight;
+  const orbs = Array.from({length:24},()=>({
+    x:Math.random()*canvas.width, y:Math.random()*canvas.height,
+    r:1.5+Math.random()*3, vx:(Math.random()-.5)*.3, vy:(Math.random()-.5)*.3,
+    alpha:.1+Math.random()*.2, hue:Math.random()>.5?'34,211,165':'103,232,249'
+  }));
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    orbs.forEach(o=>{
+      o.x+=o.vx; o.y+=o.vy;
+      if(o.x<0||o.x>canvas.width)o.vx*=-1;
+      if(o.y<0||o.y>canvas.height)o.vy*=-1;
+      ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${o.hue},${o.alpha})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+  window.addEventListener('resize',()=>{canvas.width=innerWidth;canvas.height=innerHeight;});
+
+  // Animated counters
+  function animCount(el, target, suffix=''){
+    let cur=0; const step=Math.ceil(target/60);
+    const iv=setInterval(()=>{ cur=Math.min(cur+step,target); el.textContent=cur.toLocaleString('en-IN')+suffix; if(cur>=target)clearInterval(iv); },30);
+  }
+  animCount(document.getElementById('userCount'),12400);
+  animCount(document.getElementById('co2Count'),8200);
+  animCount(document.getElementById('projCount'),340);
+
+  // Step logic
+  let currentStep = 1;
+  function updateStepper(step){
+    for(let i=1;i<=4;i++){
+      const d=document.getElementById('sd'+i);
+      d.className='s-dot '+(i<step?'done':i===step?'active':'idle');
+      if(i<step) d.textContent='✓';
+      else d.textContent=i;
+    }
+    for(let i=1;i<=3;i++){
+      document.getElementById('sl'+i).className='s-line'+(i<step?' done':'');
+    }
+  }
+  function showStep(n){
+    document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('step'+n).classList.add('active');
+    currentStep=n; updateStepper(n);
+  }
+  function nextStep(from, e){
+    // ripple
+    const btn=e.currentTarget;
+    const r=document.createElement('span'); r.className='ripple';
+    const rect=btn.getBoundingClientRect();
+    r.style.left=(e.clientX-rect.left-10)+'px'; r.style.top=(e.clientY-rect.top-10)+'px';
+    btn.appendChild(r); setTimeout(()=>r.remove(),700);
+    if(from<4) showStep(from+1);
+  }
+  function prevStep(from){ if(from>1) showStep(from-1); }
+
+  // Password strength
+  document.getElementById('password').addEventListener('input',function(){
+    const v=this.value; let score=0;
+    if(v.length>=8)score++; if(/[A-Z]/.test(v))score++; if(/[0-9]/.test(v))score++; if(/[^A-Za-z0-9]/.test(v))score++;
+    const pct=['0%','25%','50%','75%','100%'][score];
+    const cols=['','#ef4444','#f97316','#eab308','#22d3a5'];
+    const labs=['','Weak','Fair','Good','Strong'];
+    const f=document.getElementById('sFill');
+    f.style.width=pct; f.style.background=cols[score]||'';
+    const t=document.getElementById('sText');
+    t.textContent=score?labs[score]+' password':'Enter password';
+    t.style.color=cols[score]||'#64748b';
+  });
+
+  function togglePw(){
+    const i=document.getElementById('password');
+    const btn=document.querySelector('.pw-toggle');
+    i.type=i.type==='password'?'text':'password';
+    btn.textContent=i.type==='password'?'Show':'Hide';
+  }
+
+  // Role select
+  function selectRole(el){
+    document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  // Avatar preview
+  function previewAvatar(input){
+    if(input.files&&input.files[0]){
+      const reader=new FileReader();
+      reader.onload=e=>{ document.getElementById('azIcon').textContent='✓'; };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  // OTP boxes auto-advance
+  document.querySelectorAll('.otp-box').forEach((box,i,boxes)=>{
+    box.addEventListener('input',()=>{ if(box.value&&i<boxes.length-1) boxes[i+1].focus(); });
+    box.addEventListener('keydown',e=>{ if(e.key==='Backspace'&&!box.value&&i>0) boxes[i-1].focus(); });
+  });
+
+  // Resend OTP timer
+  function resendOtp(){
+    let secs=30;
+    const el=document.getElementById('resendTimer');
+    el.textContent='('+secs+'s)';
+    const iv=setInterval(()=>{ secs--; el.textContent='('+secs+'s)'; if(secs<=0){clearInterval(iv);el.textContent='';} },1000);
+  }
+
+  // Register
+  async function register(e){
+    const btn=e.currentTarget;
+    const r=document.createElement('span'); r.className='ripple';
+    const rect=btn.getBoundingClientRect();
+    r.style.left=(e.clientX-rect.left-10)+'px'; r.style.top=(e.clientY-rect.top-10)+'px';
+    btn.appendChild(r); setTimeout(()=>r.remove(),700);
+
+    if(!document.getElementById('terms').checked){ alert('Please accept the terms to continue.'); return; }
+
+    const fname = document.getElementById('fname').value;
+    const lname = document.getElementById('lname').value;
+    const email = document.getElementById('email').value;
+    const phone = document.getElementById('phone').value;
+    const password = document.getElementById('password').value;
+    const location = document.getElementById('location').value;
+    
+    let role = 'energy_provider';
+    const selectedRoleEl = document.querySelector('.role-card.selected .r-label');
+    if (selectedRoleEl) {
+       const lbl = selectedRoleEl.textContent;
+       if (lbl.includes('Leader')) role = 'community_leader';
+       else if (lbl.includes('Admin')) role = 'system_admin';
+    }
+
+    btn.textContent='Creating account...'; btn.style.opacity='0.7'; btn.style.pointerEvents='none';
+
+    try {
+      const res = await fetch('http://localhost:1000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: fname + ' ' + lname, email, phone, password, location, role })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        sessionStorage.setItem('ecoUser', JSON.stringify(data.user));
+        
+        document.querySelector('.stepper').style.display='none';
+        document.querySelectorAll('.step-panel').forEach(p=>p.style.display='none');
+        const ss=document.getElementById('successScreen');
+        ss.style.display='flex';
+        document.getElementById('accId').textContent=data.user.id || Math.random().toString(36).substring(2,10).toUpperCase();
+
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
+      } else {
+        alert(data.error || 'Registration failed');
+        btn.textContent='Register 🌿'; btn.style.opacity='1'; btn.style.pointerEvents='auto';
+      }
+    } catch(err) {
+      alert('Network Error');
+      btn.textContent='Register 🌿'; btn.style.opacity='1'; btn.style.pointerEvents='auto';
+    }
+  }
+</script>
+</body>
+</html>
