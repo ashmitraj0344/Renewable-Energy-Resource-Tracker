@@ -8,3 +8,18 @@
 *.tsbuildinfo
 # Ignore IDE specific files
 .idea/
+*.sublime-project
+*.sublime-workspace
+# Ignore OS specific files
+Thumbs.db
+Desktop.ini
+# Ignore build artifacts
+/build
+/target
+# Ignore test output
+/test-output
+# Ignore temporary files
+/tmp
+# Ignore lock files
+package-lock.json
+yarn.lock
