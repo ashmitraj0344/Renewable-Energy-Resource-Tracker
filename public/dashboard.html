@@ -13,6 +13,8 @@
       color: #e2e8f0;
       font-family: system-ui, sans-serif;
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     #bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
@@ -56,7 +58,7 @@
     .btn-logout:hover { color: #f87171; border-color: #f87171; }
 
     /* MAIN */
-    main { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
+    main { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 32px 24px; flex: 1; width: 100%; }
 
     /* WELCOME */
     .welcome-bar {
@@ -281,7 +283,7 @@
       padding: 20px 28px;
       display: flex; align-items: center; justify-content: space-between;
       font-size: 13px; color: #475569;
-      margin-top: 40px; flex-wrap: wrap; gap: 10px;
+      margin-top: auto; flex-wrap: wrap; gap: 10px;
     }
     .footer-stat { color: #22d3a5; font-weight: 600; }
 
