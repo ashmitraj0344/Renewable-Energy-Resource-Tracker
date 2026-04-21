@@ -5,7 +5,7 @@ const Location = require('./models/Location');
 const Project = require('./models/Project');
 
 async function seedData() {
-  await mongoose.connect('mongodb://localhost:27017/renewable_energy');
+  await mongoose.connect(process.env.MONGO_URI);
   console.log('Connected to DB for seeding...');
 
   await User.deleteMany({});
