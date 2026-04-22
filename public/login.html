@@ -153,11 +153,7 @@
       <div class="strength-label" id="strengthLabel">Enter password to check strength</div>
     </div>
     <button class="btn" id="loginBtn">Login</button>
-    <div class="divider"><span>or continue with</span></div>
-    <div class="social-row">
-      <button class="social-btn" onclick="socialLogin('Google')">Google</button>
-      <button class="social-btn" onclick="socialLogin('GitHub')">GitHub</button>
-    </div>
+
     <div class="eco-tip">🌿 <span id="ecoTip">This server runs on 100% renewable energy.</span></div>
     <p class="footer">Don't have an account? <a href="register.html">Sign up</a></p>
   </div>
@@ -194,13 +190,6 @@
     }
   }
 
-  function socialLogin(provider) {
-    const mockUser = { id: provider.toLowerCase() + '_user_123', name: provider + ' User', role: 'community_leader' };
-    localStorage.setItem('token', 'mock_token_' + provider);
-    localStorage.setItem('user', JSON.stringify(mockUser));
-    sessionStorage.setItem('ecoUser', JSON.stringify(mockUser));
-    window.location.href = 'dashboard.html';
-  }
 
   // Slider
   const slides = document.getElementById('slides');
