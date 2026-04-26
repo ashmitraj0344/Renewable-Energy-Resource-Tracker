@@ -1,659 +1,441 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard | EcoTrack</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: linear-gradient(135deg, #052e2b, #0f766e, #38bdf8); background-attachment: fixed;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-
-    /* HEADER */
-    header {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(5, 46, 43, 0.95);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(100,116,139,0.2);
-      padding: 14px 20px;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    .logo { display: flex; align-items: center; gap: 10px; }
-    .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: #22d3a5; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
-    .logo-text { font-size: 18px; font-weight: 700; color: #22d3a5; letter-spacing: -0.5px; }
-
-    .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
-    .user-pill {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(34,211,165,0.08);
-      border: 1px solid rgba(34,211,165,0.2);
-      border-radius: 20px; padding: 6px 14px;
-      font-size: 13px; color: #6ee7b7;
-    }
-    .user-avatar {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: linear-gradient(135deg, #06b6d4, #10b981);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; color: #022c22;
-    }
-    .btn-sm {
-      padding: 8px 16px; border-radius: 12px; font-size: 13px;
-      font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
-    }
-    .btn-toggle { background: rgba(100,116,139,0.2); color: #94a3b8; border: 1px solid rgba(100,116,139,0.3); }
-    .btn-toggle:hover { background: rgba(100,116,139,0.35); color: #e2e8f0; }
-    .btn-logout { background: transparent; color: #64748b; border: 1px solid rgba(100,116,139,0.2); }
-    .btn-logout:hover { color: #f87171; border-color: #f87171; }
-
-    /* MAIN */
-    main { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 20px 16px; flex: 1; width: 100%; overflow-x: hidden; }
-
-    /* WELCOME */
-    .welcome-bar {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
-    }
-    .welcome-text h2 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-    .welcome-text p { font-size: 14px; color: #64748b; }
-    .welcome-text span { color: #22d3a5; font-weight: 600; }
-    .live-badge {
-      display: flex; align-items: center; gap: 6px;
-      background: rgba(34,211,165,0.08);
-      border: 1px solid rgba(34,211,165,0.2);
-      border-radius: 20px; padding: 8px 16px;
-      font-size: 12px; color: #22d3a5; font-weight: 600;
-    }
-    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #22d3a5; animation: pulse 1.5s infinite; }
-
-    /* STAT CARDS */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 16px; margin-bottom: 28px; }
-    .stat-card {
-      background: rgba(4, 25, 30, 0.85);
-      border: 1px solid rgba(100,116,139,0.2);
-      border-radius: 20px; padding: 22px;
-      transition: border-color 0.2s, transform 0.2s;
-      cursor: default;
-    }
-    .stat-card:hover { border-color: rgba(34,211,165,0.4); transform: translateY(-2px); }
-    .stat-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
-    .stat-label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-    .stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-    .stat-icon.green { background: rgba(34,211,165,0.12); }
-    .stat-icon.blue { background: rgba(103,232,249,0.12); }
-    .stat-icon.amber { background: rgba(251,191,36,0.12); }
-    .stat-icon.pink { background: rgba(236,72,153,0.12); }
-    .stat-value { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-    .stat-change { font-size: 12px; font-weight: 600; }
-    .stat-change.up { color: #22d3a5; }
-    .stat-change.down { color: #f87171; }
-    .stat-bar { height: 4px; border-radius: 2px; background: rgba(100,116,139,0.2); margin-top: 12px; overflow: hidden; }
-    .stat-bar-fill { height: 100%; border-radius: 2px; transition: width 1.2s ease; }
-
-    /* CHART SECTION */
-    .chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 28px; }
-    @media(max-width:900px) { .chart-grid { grid-template-columns: 1fr; } }
-
-    .chart-card {
-      background: rgba(4, 25, 30, 0.85);
-      border: 1px solid rgba(100,116,139,0.2);
-      border-radius: 20px; padding: 24px;
-    }
-    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-    .chart-title { font-size: 16px; font-weight: 600; color: #e2e8f0; }
-    .chart-tabs { display: flex; gap: 6px; }
-    .ctab {
-      padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 600;
-      cursor: pointer; border: 1px solid rgba(100,116,139,0.25);
-      background: transparent; color: #64748b; transition: all 0.2s;
-    }
-    .ctab.active { background: rgba(34,211,165,0.12); border-color: #22d3a5; color: #22d3a5; }
-
-    /* Mini donut card */
-    .donut-card {
-      background: rgba(4, 25, 30, 0.85);
-      border: 1px solid rgba(100,116,139,0.2);
-      border-radius: 20px; padding: 24px;
-      display: flex; flex-direction: column;
-    }
-    .donut-legend { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
-    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #94a3b8; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .legend-val { margin-left: auto; font-weight: 600; color: #e2e8f0; }
-
-    /* PROJECTS */
-    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
-    .section-title { font-size: 20px; font-weight: 700; color: #e2e8f0; }
-    .filter-row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .filter-select {
-      padding: 8px 14px; border-radius: 12px; font-size: 13px;
-      background: rgba(4, 25, 30, 0.85);
-      border: 1px solid rgba(100,116,139,0.3);
-      color: #e2e8f0; outline: none; cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    .filter-select:focus { border-color: #22d3a5; }
-    .btn-add {
-      padding: 10px 20px; border-radius: 14px; border: none;
-      background: linear-gradient(90deg, #06b6d4, #10b981);
-      color: #022c22; font-size: 13px; font-weight: 700;
-      cursor: pointer; transition: transform 0.15s, box-shadow 0.2s;
-    }
-    .btn-add:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(34,211,165,0.3); }
-
-    /* PROJECT CARDS */
-    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 16px; }
-    .proj-card {
-      background: rgba(4, 25, 30, 0.85);
-      border: 1px solid rgba(100,116,139,0.2);
-      border-radius: 20px; padding: 22px;
-      transition: border-color 0.2s, transform 0.2s;
-      position: relative; overflow: hidden;
-    }
-    .proj-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      border-radius: 20px 20px 0 0;
-    }
-    .proj-card.solar::before { background: linear-gradient(90deg,#f59e0b,#fcd34d); }
-    .proj-card.wind::before { background: linear-gradient(90deg,#06b6d4,#67e8f9); }
-    .proj-card.hydro::before { background: linear-gradient(90deg,#3b82f6,#93c5fd); }
-    .proj-card.biomass::before { background: linear-gradient(90deg,#22c55e,#86efac); }
-    .proj-card:hover { border-color: rgba(34,211,165,0.35); transform: translateY(-3px); }
-
-    .proj-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
-    .proj-name { font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
-    .proj-location { font-size: 12px; color: #64748b; }
-    .type-badge {
-      padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.06em;
-    }
-    .type-badge.solar { background: rgba(245,158,11,0.15); color: #fcd34d; }
-    .type-badge.wind { background: rgba(6,182,212,0.15); color: #67e8f9; }
-    .type-badge.hydro { background: rgba(59,130,246,0.15); color: #93c5fd; }
-    .type-badge.biomass { background: rgba(34,197,94,0.15); color: #86efac; }
-
-    .proj-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .proj-stat { background: rgba(3, 20, 20,0.6); border-radius: 10px; padding: 10px 12px; }
-    .proj-stat-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
-    .proj-stat-val { font-size: 15px; font-weight: 700; color: #e2e8f0; }
-
-    .proj-capacity-bar { margin-bottom: 14px; }
-    .proj-capacity-label { display: flex; justify-content: space-between; font-size: 11px; color: #64748b; margin-bottom: 6px; }
-    .cap-bar { height: 6px; border-radius: 3px; background: rgba(100,116,139,0.2); overflow: hidden; }
-    .cap-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
-
-    .status-badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600;
-    }
-    .status-badge.active { background: rgba(34,211,165,0.1); color: #22d3a5; }
-    .status-badge.inactive { background: rgba(248,113,113,0.1); color: #f87171; }
-    .status-dot { width: 6px; height: 6px; border-radius: 50%; }
-    .status-dot.active { background: #22d3a5; animation: pulse 1.8s infinite; }
-    .status-dot.inactive { background: #f87171; }
-
-    .proj-actions { display: flex; gap: 8px; margin-top: 14px; }
-    .btn-proj {
-      flex: 1; padding: 9px; border-radius: 11px; font-size: 12px; font-weight: 600;
-      cursor: pointer; border: none; transition: all 0.2s;
-    }
-    .btn-invest { background: linear-gradient(90deg,#06b6d4,#10b981); color: #022c22; }
-    .btn-invest:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(34,211,165,0.25); }
-    .btn-edit { background: rgba(100,116,139,0.15); color: #94a3b8; border: 1px solid rgba(100,116,139,0.25); }
-    .btn-edit:hover { border-color: #94a3b8; color: #e2e8f0; }
-    .btn-delete { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.2); }
-    .btn-delete:hover { background: rgba(248,113,113,0.2); }
-
-    /* MODAL */
-    .modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(3, 20, 20,0.85); backdrop-filter: blur(8px);
-      z-index: 200; align-items: center; justify-content: center; padding: 24px;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal-box {
-      background: #052e2b;
-      border: 1px solid rgba(100,116,139,0.3);
-      border-radius: 24px; padding: 32px;
-      width: min(100%,480px);
-      box-shadow: 0 40px 80px rgba(0,0,0,0.5);
-      animation: slideUp 0.3s ease;
-    }
-    @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
-    .modal-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 20px; }
-    .modal-field { margin-bottom: 14px; }
-    .modal-field label { display: block; font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-    .modal-field input, .modal-field select {
-      width: 100%; padding: 12px 16px; border-radius: 13px;
-      background: #1e2d42; border: 1.5px solid #334155;
-      color: #f1f5f9; font-size: 14px; outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .modal-field input::placeholder { color: #64748b; }
-    .modal-field input:focus, .modal-field select:focus {
-      border-color: #22d3a5; box-shadow: 0 0 0 3px rgba(34,211,165,0.12);
-    }
-    .modal-field select option { background: #1e2d42; }
-    .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-modal-cancel {
-      flex: 1; padding: 12px; border-radius: 13px;
-      background: rgba(4, 25, 30, 0.85); border: 1px solid rgba(100,116,139,0.3);
-      color: #94a3b8; font-size: 14px; font-weight: 600; cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-modal-cancel:hover { border-color: #64748b; color: #e2e8f0; }
-    .btn-modal-submit {
-      flex: 2; padding: 12px; border-radius: 13px; border: none;
-      background: linear-gradient(90deg,#06b6d4,#10b981);
-      color: #022c22; font-size: 14px; font-weight: 700; cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.2s;
-    }
-    .btn-modal-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(34,211,165,0.3); }
-
-    /* TOAST */
-    .toast {
-      position: fixed; bottom: 28px; right: 28px; z-index: 300;
-      background: rgba(4, 25, 30,0.97); border: 1px solid rgba(34,211,165,0.3);
-      border-radius: 14px; padding: 14px 20px;
-      font-size: 13px; color: #6ee7b7; font-weight: 600;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-      transform: translateY(80px); opacity: 0;
-      transition: all 0.4s cubic-bezier(.36,.07,.19,.97);
-      display: flex; align-items: center; gap: 8px;
-    }
-    .toast.show { transform: translateY(0); opacity: 1; }
-
-    /* FOOTER */
-    footer {
-      position: relative; z-index: 1;
-      background: rgba(5, 46, 43, 0.95);
-      border-top: 1px solid rgba(100,116,139,0.15);
-      padding: 20px 28px;
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 13px; color: #475569;
-      margin-top: auto; flex-wrap: wrap; gap: 10px;
-    }
-    .footer-stat { color: #22d3a5; font-weight: 600; }
-
-    /* LIGHT MODE STYLES */
-    body.light-mode { background: #f1f5f9; color: #1e293b; }
-    body.light-mode header { background: rgba(255,255,255,0.95); border-color: #cbd5e1; }
-    body.light-mode .welcome-text h2 { color: #0f172a; }
-    body.light-mode .stat-card { background: #fff; border-color: #e2e8f0; }
-    body.light-mode .stat-value { color: #0f172a; }
-    body.light-mode .chart-card { background: #fff; border-color: #e2e8f0; }
-    body.light-mode .donut-card { background: #fff; border-color: #e2e8f0; }
-    body.light-mode .chart-title { color: #0f172a; }
-    body.light-mode .legend-val { color: #0f172a; }
-    body.light-mode .section-title { color: #0f172a; }
-    body.light-mode .filter-select { background: #fff; border-color: #cbd5e1; color: #0f172a; }
-    body.light-mode .proj-card { background: #fff; border-color: #cbd5e1; }
-    body.light-mode .proj-name { color: #0f172a; }
-    body.light-mode .proj-stat { background: #f8fafc; }
-    body.light-mode .proj-stat-val { color: #0f172a; }
-    body.light-mode .modal-box { background: #fff; border-color: #e2e8f0; }
-    body.light-mode .modal-title { color: #0f172a; }
-    body.light-mode .modal-field input, body.light-mode .modal-field select { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
-    body.light-mode .btn-modal-cancel { background: #f1f5f9; border-color: #cbd5e1; color: #475569; }
-    body.light-mode footer { background: rgba(255,255,255,0.95); border-color: #cbd5e1; }
-  </style>
-<script src="/js/speed-insights.js" defer></script>
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <script src="/js/speed-insights.js" defer></script>
 </head>
+
 <body>
 
-<canvas id="bg"></canvas>
+  <canvas id="bg"></canvas>
 
-<!-- HEADER -->
-<header>
-  <div class="logo">
-    <div class="logo-dot"></div>
-    <span class="logo-text">EcoTrack</span>
-    <span style="font-size:11px;color:#475569;margin-left:4px;font-weight:600;">Dashboard</span>
-  </div>
-  <div class="header-right">
-    <div class="live-badge"><div class="live-dot"></div>Live Data</div>
-    <div style="display:flex;gap:8px;margin-right:10px;flex-wrap:wrap;justify-content:center;">
-      <button class="btn-sm btn-toggle" id="tab-btn-dash" style="background:rgba(34,211,165,0.2);color:#22d3a5;" onclick="switchTab('dash')">Dashboard</button>
-      <button class="btn-sm btn-toggle" id="tab-btn-proj" onclick="switchTab('proj')">Projects</button>
-      <button class="btn-sm btn-toggle" id="tab-btn-hist" style="display:none;" onclick="switchTab('hist')">History</button>
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span class="logo-text">EcoTrack</span>
+      <span style="font-size:11px;color:#475569;margin-left:4px;font-weight:600;">Dashboard</span>
     </div>
-    <div class="user-pill">
-      <div class="user-avatar" id="userAvatar">G</div>
-      <span id="user-info">Guest</span>
+    <div class="header-right">
+      <div class="live-badge">
+        <div class="live-dot"></div>Live Data
+      </div>
+      <div style="display:flex;gap:8px;margin-right:10px;flex-wrap:wrap;justify-content:center;">
+        <button class="btn-sm btn-toggle" id="tab-btn-dash" style="background:rgba(34,211,165,0.2);color:#22d3a5;"
+          onclick="switchTab('dash')">Dashboard</button>
+        <button class="btn-sm btn-toggle" id="tab-btn-proj" onclick="switchTab('proj')">Projects</button>
+        <button class="btn-sm btn-toggle" id="tab-btn-hist" style="display:none;"
+          onclick="switchTab('hist')">History</button>
+      </div>
+      <div class="user-pill">
+        <div class="user-avatar" id="userAvatar">G</div>
+        <span id="user-info">Guest</span>
+      </div>
+      <button class="btn-sm btn-toggle" id="toggle-bg-btn">☀️ Light</button>
+      <button class="btn-sm btn-logout" id="logout-btn">Logout</button>
     </div>
-    <button class="btn-sm btn-toggle" id="toggle-bg-btn">☀️ Light</button>
-    <button class="btn-sm btn-logout" id="logout-btn">Logout</button>
-  </div>
-</header>
+  </header>
 
-<!-- MAIN -->
-<main>
+  <!-- MAIN -->
+  <main>
 
-  <div id="view-dash">
-  <!-- WELCOME -->
-  <div class="welcome-bar">
-    <div class="welcome-text">
-      <h2>Community Energy Dashboard</h2>
-      <p>Welcome back, <span id="welcome-user">Guest User</span> · <span id="welcome-role" style="color:#64748b">viewer</span></p>
-    </div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <div class="live-badge" style="font-size:11px;">
-        🕐 Last updated: <span id="lastUpdated" style="margin-left:4px;">just now</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- STATS -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-top">
-        <span class="stat-label">Total Generation</span>
-        <div class="stat-icon green">⚡</div>
-      </div>
-      <div class="stat-value" id="stat-generation">19,550 kWh</div>
-      <div class="stat-change up" id="gen-change">↑ +12% this week</div>
-      <div class="stat-bar"><div class="stat-bar-fill" style="width:78%;background:linear-gradient(90deg,#22d3a5,#06b6d4);"></div></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-top">
-        <span class="stat-label">Total Usage</span>
-        <div class="stat-icon blue">🔌</div>
-      </div>
-      <div class="stat-value" id="stat-usage">14,320 kWh</div>
-      <div class="stat-change down" id="usage-change">↓ -5% this week</div>
-      <div class="stat-bar"><div class="stat-bar-fill" style="width:57%;background:linear-gradient(90deg,#3b82f6,#67e8f9);"></div></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-top">
-        <span class="stat-label">Grid Storage</span>
-        <div class="stat-icon amber">🔋</div>
-      </div>
-      <div class="stat-value" id="stat-storage">85%</div>
-      <div class="stat-change up">↑ Optimal levels</div>
-      <div class="stat-bar"><div class="stat-bar-fill" style="width:85%;background:linear-gradient(90deg,#f59e0b,#fcd34d);"></div></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-top">
-        <span class="stat-label">CO₂ Saved</span>
-        <div class="stat-icon pink">🌿</div>
-      </div>
-      <div class="stat-value" id="stat-co2">8.4 T</div>
-      <div class="stat-change up">↑ +3.2% this month</div>
-      <div class="stat-bar"><div class="stat-bar-fill" style="width:64%;background:linear-gradient(90deg,#ec4899,#a855f7);"></div></div>
-    </div>
-  </div>
-
-  <!-- CHARTS -->
-  <div class="chart-grid">
-    <div class="chart-card">
-      <div class="chart-header">
-        <span class="chart-title">Generation vs Usage</span>
-        <div class="chart-tabs">
-          <button class="ctab active" onclick="switchChart('week',this)">Week</button>
-          <button class="ctab" onclick="switchChart('month',this)">Month</button>
-          <button class="ctab" onclick="switchChart('year',this)">Year</button>
+    <div id="view-dash">
+      <!-- WELCOME -->
+      <div class="welcome-bar">
+        <div class="welcome-text">
+          <h2>Community Energy Dashboard</h2>
+          <p>Welcome back, <span id="welcome-user">Guest User</span> · <span id="welcome-role"
+              style="color:#64748b">viewer</span></p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div class="live-badge" style="font-size:11px;">
+            🕐 Last updated: <span id="lastUpdated" style="margin-left:4px;">just now</span>
+          </div>
         </div>
       </div>
-      <canvas id="energy-chart" style="max-height:260px;"></canvas>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Total Generation</span>
+            <div class="stat-icon green">⚡</div>
+          </div>
+          <div class="stat-value" id="stat-generation">19,550 kWh</div>
+          <div class="stat-change up" id="gen-change">↑ +12% this week</div>
+          <div class="stat-bar">
+            <div class="stat-bar-fill" style="width:78%;background:linear-gradient(90deg,#22d3a5,#06b6d4);"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Total Usage</span>
+            <div class="stat-icon blue">🔌</div>
+          </div>
+          <div class="stat-value" id="stat-usage">14,320 kWh</div>
+          <div class="stat-change down" id="usage-change">↓ -5% this week</div>
+          <div class="stat-bar">
+            <div class="stat-bar-fill" style="width:57%;background:linear-gradient(90deg,#3b82f6,#67e8f9);"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Grid Storage</span>
+            <div class="stat-icon amber">🔋</div>
+          </div>
+          <div class="stat-value" id="stat-storage">85%</div>
+          <div class="stat-change up">↑ Optimal levels</div>
+          <div class="stat-bar">
+            <div class="stat-bar-fill" style="width:85%;background:linear-gradient(90deg,#f59e0b,#fcd34d);"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">CO₂ Saved</span>
+            <div class="stat-icon pink">🌿</div>
+          </div>
+          <div class="stat-value" id="stat-co2">8.4 T</div>
+          <div class="stat-change up">↑ +3.2% this month</div>
+          <div class="stat-bar">
+            <div class="stat-bar-fill" style="width:64%;background:linear-gradient(90deg,#ec4899,#a855f7);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARTS -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">Generation vs Usage</span>
+            <div class="chart-tabs">
+              <button class="ctab active" onclick="switchChart('week',this)">Week</button>
+              <button class="ctab" onclick="switchChart('month',this)">Month</button>
+              <button class="ctab" onclick="switchChart('year',this)">Year</button>
+            </div>
+          </div>
+          <canvas id="energy-chart" style="max-height:260px;"></canvas>
+        </div>
+        <div class="donut-card">
+          <div class="chart-title" style="margin-bottom:16px;">Energy Mix</div>
+          <canvas id="donut-chart" style="max-height:180px;"></canvas>
+          <div class="donut-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#f59e0b;"></div>Solar<span class="legend-val"
+                id="legend-solar">42%</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#06b6d4;"></div>Wind<span class="legend-val"
+                id="legend-wind">31%</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#3b82f6;"></div>Hydro<span class="legend-val"
+                id="legend-hydro">18%</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#22c55e;"></div>Biomass<span class="legend-val"
+                id="legend-biomass">9%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <div class="donut-card">
-      <div class="chart-title" style="margin-bottom:16px;">Energy Mix</div>
-      <canvas id="donut-chart" style="max-height:180px;"></canvas>
-      <div class="donut-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div>Solar<span class="legend-val" id="legend-solar">42%</span></div>
-        <div class="legend-item"><div class="legend-dot" style="background:#06b6d4;"></div>Wind<span class="legend-val" id="legend-wind">31%</span></div>
-        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div>Hydro<span class="legend-val" id="legend-hydro">18%</span></div>
-        <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div>Biomass<span class="legend-val" id="legend-biomass">9%</span></div>
+
+    <div id="view-proj" style="display:none;">
+      <!-- PROJECTS HEADER -->
+      <div class="section-header">
+        <span class="section-title">Projects Overview <span style="font-size:14px;color:#64748b;font-weight:400;"
+            id="projCount">(0 projects)</span></span>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <div class="filter-row">
+            <select class="filter-select" id="filter-type" onchange="renderProjects()">
+              <option value="">All Types</option>
+              <option value="solar">Solar</option>
+              <option value="wind">Wind</option>
+              <option value="hydro">Hydro</option>
+              <option value="biomass">Biomass</option>
+            </select>
+            <select class="filter-select" id="filter-status" onchange="renderProjects()">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <button class="btn-add" id="add-project-btn" style="display:none;" onclick="openModal('add')">+ Add
+            Project</button>
+        </div>
+      </div>
+
+      <div class="projects-grid" id="projects-grid"></div>
+
+    </div>
+
+    <div id="view-hist" style="display:none;">
+      <div class="section-header"><span class="section-title">Investment History</span></div>
+      <div class="projects-grid" id="history-grid"></div>
+    </div>
+
+  </main>
+
+  <!-- ADD MODAL -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal-box">
+      <div class="modal-title">✦ Create New Project</div>
+      <div class="modal-field"><label>Project Name</label><input type="text" id="p-name"
+          placeholder="e.g. Solar Farm Alpha"></div>
+      <div class="modal-row">
+        <div class="modal-field">
+          <label>Type</label>
+          <select id="p-type">
+            <option value="solar">Solar</option>
+            <option value="wind">Wind</option>
+            <option value="hydro">Hydro</option>
+            <option value="biomass">Biomass</option>
+          </select>
+        </div>
+        <div class="modal-field"><label>Location ID</label><input type="text" id="p-location" placeholder="LOC001">
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field"><label>Capacity (KW)</label><input type="number" id="p-capacity" placeholder="500">
+        </div>
+        <div class="modal-field"><label>Price (₹/KWh)</label><input type="number" id="p-price" placeholder="4.5"
+            step="0.01"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeModal('add')">Cancel</button>
+        <button class="btn-modal-submit" onclick="addProject()">Create Project</button>
       </div>
     </div>
   </div>
 
-  </div>
-
-<div id="view-proj" style="display:none;">
-  <!-- PROJECTS HEADER -->
-  <div class="section-header">
-    <span class="section-title">Projects Overview <span style="font-size:14px;color:#64748b;font-weight:400;" id="projCount">(0 projects)</span></span>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <div class="filter-row">
-        <select class="filter-select" id="filter-type" onchange="renderProjects()">
-          <option value="">All Types</option>
-          <option value="solar">Solar</option>
-          <option value="wind">Wind</option>
-          <option value="hydro">Hydro</option>
-          <option value="biomass">Biomass</option>
-        </select>
-        <select class="filter-select" id="filter-status" onchange="renderProjects()">
-          <option value="">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
+  <!-- EDIT MODAL -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-box">
+      <div class="modal-title">✎ Edit Project</div>
+      <div class="modal-field"><label>Project Name</label><input type="text" id="edit-p-name"
+          placeholder="Project name"></div>
+      <div class="modal-row">
+        <div class="modal-field">
+          <label>Type</label>
+          <select id="edit-p-type">
+            <option value="solar">Solar</option>
+            <option value="wind">Wind</option>
+            <option value="hydro">Hydro</option>
+            <option value="biomass">Biomass</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Status</label>
+          <select id="edit-p-status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
       </div>
-      <button class="btn-add" id="add-project-btn" style="display:none;" onclick="openModal('add')">+ Add Project</button>
-    </div>
-  </div>
-
-  <div class="projects-grid" id="projects-grid"></div>
-
-</div>
-
-<div id="view-hist" style="display:none;">
-  <div class="section-header"><span class="section-title">Investment History</span></div>
-  <div class="projects-grid" id="history-grid"></div>
-</div>
-
-</main>
-
-<!-- ADD MODAL -->
-<div class="modal-overlay" id="addModal">
-  <div class="modal-box">
-    <div class="modal-title">✦ Create New Project</div>
-    <div class="modal-field"><label>Project Name</label><input type="text" id="p-name" placeholder="e.g. Solar Farm Alpha"></div>
-    <div class="modal-row">
-      <div class="modal-field">
-        <label>Type</label>
-        <select id="p-type">
-          <option value="solar">Solar</option>
-          <option value="wind">Wind</option>
-          <option value="hydro">Hydro</option>
-          <option value="biomass">Biomass</option>
-        </select>
+      <div class="modal-row">
+        <div class="modal-field"><label>Capacity (KW)</label><input type="number" id="edit-p-capacity"></div>
+        <div class="modal-field"><label>Price (₹/KWh)</label><input type="number" id="edit-p-price" step="0.01"></div>
       </div>
-      <div class="modal-field"><label>Location ID</label><input type="text" id="p-location" placeholder="LOC001"></div>
-    </div>
-    <div class="modal-row">
-      <div class="modal-field"><label>Capacity (KW)</label><input type="number" id="p-capacity" placeholder="500"></div>
-      <div class="modal-field"><label>Price (₹/KWh)</label><input type="number" id="p-price" placeholder="4.5" step="0.01"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-modal-cancel" onclick="closeModal('add')">Cancel</button>
-      <button class="btn-modal-submit" onclick="addProject()">Create Project</button>
-    </div>
-  </div>
-</div>
-
-<!-- EDIT MODAL -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal-box">
-    <div class="modal-title">✎ Edit Project</div>
-    <div class="modal-field"><label>Project Name</label><input type="text" id="edit-p-name" placeholder="Project name"></div>
-    <div class="modal-row">
-      <div class="modal-field">
-        <label>Type</label>
-        <select id="edit-p-type">
-          <option value="solar">Solar</option>
-          <option value="wind">Wind</option>
-          <option value="hydro">Hydro</option>
-          <option value="biomass">Biomass</option>
-        </select>
-      </div>
-      <div class="modal-field">
-        <label>Status</label>
-        <select id="edit-p-status">
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
+      <input type="hidden" id="edit-p-id">
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" onclick="closeModal('edit')">Cancel</button>
+        <button class="btn-modal-submit" onclick="saveEdit()">Update Project</button>
       </div>
     </div>
-    <div class="modal-row">
-      <div class="modal-field"><label>Capacity (KW)</label><input type="number" id="edit-p-capacity"></div>
-      <div class="modal-field"><label>Price (₹/KWh)</label><input type="number" id="edit-p-price" step="0.01"></div>
-    </div>
-    <input type="hidden" id="edit-p-id">
-    <div class="modal-actions">
-      <button class="btn-modal-cancel" onclick="closeModal('edit')">Cancel</button>
-      <button class="btn-modal-submit" onclick="saveEdit()">Update Project</button>
-    </div>
   </div>
-</div>
 
-<!-- TOAST -->
-<div class="toast" id="toast">✓ <span id="toastMsg"></span></div>
+  <!-- TOAST -->
+  <div class="toast" id="toast">✓ <span id="toastMsg"></span></div>
 
-<!-- FOOTER -->
-<footer>
-  <span>© 2026 EcoTrack · All rights reserved</span>
-  <span>Total Projects: <span class="footer-stat" id="footerCount">0</span> · Active: <span class="footer-stat" id="footerActive">0</span> · CO₂ Offset: <span class="footer-stat">8.4T</span></span>
-</footer>
+  <!-- ADVANCED FOOTER -->
+  <footer class="advanced-footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <div class="logo">
+          <div class="logo-dot"></div>
+          <span class="logo-text">EcoTrack</span>
+        </div>
+        <p class="footer-quote">"The future is green energy, sustainability, renewable energy." <br>— Arnold Schwarzenegger</p>
+      </div>
 
-<script>
-// ── Particles ──
-const canvas = document.getElementById('bg');
-const ctx = canvas.getContext('2d');
-canvas.width = innerWidth; canvas.height = innerHeight;
-const orbs = Array.from({length:20},()=>({
-  x:Math.random()*canvas.width, y:Math.random()*canvas.height,
-  r:1.5+Math.random()*3, vx:(Math.random()-.5)*.3, vy:(Math.random()-.5)*.3,
-  alpha:.08+Math.random()*.15, hue:Math.random()>.5?'34,211,165':'103,232,249'
-}));
-function drawBg(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  orbs.forEach(o=>{
-    o.x+=o.vx; o.y+=o.vy;
-    if(o.x<0||o.x>canvas.width)o.vx*=-1;
-    if(o.y<0||o.y>canvas.height)o.vy*=-1;
-    ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2);
-    ctx.fillStyle=`rgba(${o.hue},${o.alpha})`; ctx.fill();
-  });
-  requestAnimationFrame(drawBg);
-}
-drawBg();
-window.addEventListener('resize',()=>{canvas.width=innerWidth;canvas.height=innerHeight;});
+      <div class="footer-contact">
+        <h4 class="footer-heading">Contact Us</h4>
+        <div class="contact-item">
+          <span class="contact-icon">📞</span>
+          <span>+91 7463853747</span>
+        </div>
+        <div class="contact-item">
+          <span class="contact-icon">✉️</span>
+          <div class="email-list">
+            <a href="mailto:ashmitr0344@gmail.com">ashmitr0344@gmail.com</a>
+            <a href="mailto:ashmit.raj2024@lpu.in">ashmit.raj2024@lpu.in</a>
+          </div>
+        </div>
+      </div>
 
-// ── Projects Data ──
-let projects = [];
+      <div class="footer-live-stats">
+        <h4 class="footer-heading">Platform Pulse</h4>
+        <div class="pulse-grid">
+          <div class="pulse-box">
+            <div class="pulse-val" id="footerCount">0</div>
+            <div class="pulse-lbl">Total Projects</div>
+          </div>
+          <div class="pulse-box">
+            <div class="pulse-val" id="footerActive" style="color:#22d3a5;">0</div>
+            <div class="pulse-lbl">Active Projects</div>
+          </div>
+          <div class="pulse-box">
+            <div class="pulse-val" style="color:#38bdf8;">8.4T</div>
+            <div class="pulse-lbl">CO₂ Offset</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 EcoTrack Community. All rights reserved.</span>
+      <div class="footer-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
 
-async function fetchProjects() {
-  try {
-    const res = await fetch('/api/projects');
-    const data = await res.json();
-    projects = data.map(p => ({
-      id: p._id, name: p.name, type: p.energyType, location: p.locationId ? (p.locationId.name || p.locationId) : 'Unknown',
-      capacity: p.capacityKW, price: p.pricePerKWh, status: p.status, createdBy: p.createdBy ? p.createdBy._id : null,
-      generation: Math.round(p.capacityKW * 6.4), usage: Math.round(p.capacityKW * 3.6)
+  <script>
+    // ── Particles ──
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+    canvas.width = innerWidth; canvas.height = innerHeight;
+    const orbs = Array.from({ length: 20 }, () => ({
+      x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+      r: 1.5 + Math.random() * 3, vx: (Math.random() - .5) * .3, vy: (Math.random() - .5) * .3,
+      alpha: .08 + Math.random() * .15, hue: Math.random() > .5 ? '34,211,165' : '103,232,249'
     }));
-    renderProjects();
-    updateStats();
-  } catch(e) { console.error(e); }
-}
+    function drawBg() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      orbs.forEach(o => {
+        o.x += o.vx; o.y += o.vy;
+        if (o.x < 0 || o.x > canvas.width) o.vx *= -1;
+        if (o.y < 0 || o.y > canvas.height) o.vy *= -1;
+        ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${o.hue},${o.alpha})`; ctx.fill();
+      });
+      requestAnimationFrame(drawBg);
+    }
+    drawBg();
+    window.addEventListener('resize', () => { canvas.width = innerWidth; canvas.height = innerHeight; });
 
-function updateStats(){
-  const totalGen = projects.reduce((s,p)=>s+p.generation,0);
-  const totalUse = projects.reduce((s,p)=>s+p.usage,0);
-  document.getElementById('stat-generation').textContent = totalGen.toLocaleString('en-IN') + ' kWh';
-  document.getElementById('stat-usage').textContent = totalUse.toLocaleString('en-IN') + ' kWh';
-  
-  // Smart Sync for Donut Chart
-  let mix = { solar:0, wind:0, hydro:0, biomass:0 };
-  projects.forEach(p => { if (mix[p.type] !== undefined) mix[p.type] += p.capacity; });
-  let tCap = mix.solar + mix.wind + mix.hydro + mix.biomass || 1;
-  const dSolar = Math.round((mix.solar/tCap)*100);
-  const dWind = Math.round((mix.wind/tCap)*100);
-  const dHydro = Math.round((mix.hydro/tCap)*100);
-  const dBio = Math.round((mix.biomass/tCap)*100);
-  
-  if(donutChart){
-    donutChart.data.datasets[0].data = [dSolar, dWind, dHydro, dBio];
-    donutChart.update();
-  }
-  
-  // Smart Sync for Legend UI
-  const els = { solar: dSolar, wind: dWind, hydro: dHydro, biomass: dBio };
-  for (const [k, v] of Object.entries(els)) {
-    const el = document.getElementById('legend-'+k);
-    if(el) el.textContent = v + '%';
-  }
-  
-  // Smart Sync for Line Chart mathematically based on live MongoDB total
-  if (totalGen > 0 || totalUse > 0) {
-    const cGen = [0.15, 0.25, 0.40, 0.35, 0.25, 0.15, 0.10];
-    const cUse = [0.10, 0.20, 0.30, 0.28, 0.20, 0.12, 0.08];
-    const sCGen = cGen.reduce((a,b)=>a+b,0);
-    const sCUse = cUse.reduce((a,b)=>a+b,0);
-    
-    // Scale live totals over week
-    weekData.gen = cGen.map(v => Math.round((v/sCGen)*totalGen));
-    weekData.use = cUse.map(v => Math.round((v/sCUse)*totalUse));
-    // Propose month/year proportional scales
-    monthData.gen = weekData.gen.slice(0,4).map(v => v*4);
-    monthData.use = weekData.use.slice(0,4).map(v => v*4);
-    yearData.gen = new Array(12).fill(0).map((_,i) => Math.round(totalGen * 4 * (1 + Math.sin(i)/4)));
-    yearData.use = new Array(12).fill(0).map((_,i) => Math.round(totalUse * 4 * (1 + Math.sin(i)/4)));
-  }
+    // ── Projects Data ──
+    let projects = [];
 
-  if(typeof updateChart === 'function') updateChart();
-}
+    async function fetchProjects() {
+      try {
+        const res = await fetch('/api/projects');
+        const data = await res.json();
+        projects = data.map(p => ({
+          id: p._id, name: p.name, type: p.energyType, location: p.locationId ? (p.locationId.name || p.locationId) : 'Unknown',
+          capacity: p.capacityKW, price: p.pricePerKWh, status: p.status, createdBy: p.createdBy ? p.createdBy._id : null,
+          generation: Math.round(p.capacityKW * 6.4), usage: Math.round(p.capacityKW * 3.6)
+        }));
+        renderProjects();
+        updateStats();
+      } catch (e) { console.error(e); }
+    }
 
-const typeIcons = { solar:'☀️', wind:'💨', hydro:'💧', biomass:'🌾' };
-const typeColors = { solar:'#f59e0b', wind:'#06b6d4', hydro:'#3b82f6', biomass:'#22c55e' };
+    function updateStats() {
+      const totalGen = projects.reduce((s, p) => s + p.generation, 0);
+      const totalUse = projects.reduce((s, p) => s + p.usage, 0);
+      document.getElementById('stat-generation').textContent = totalGen.toLocaleString('en-IN') + ' kWh';
+      document.getElementById('stat-usage').textContent = totalUse.toLocaleString('en-IN') + ' kWh';
 
-function renderProjects() {
-  const tf = document.getElementById('filter-type').value;
-  const sf = document.getElementById('filter-status').value;
-  const filtered = projects.filter(p => (!tf||p.type===tf) && (!sf||p.status===sf));
+      // Smart Sync for Donut Chart
+      let mix = { solar: 0, wind: 0, hydro: 0, biomass: 0 };
+      projects.forEach(p => { if (mix[p.type] !== undefined) mix[p.type] += p.capacity; });
+      let tCap = mix.solar + mix.wind + mix.hydro + mix.biomass || 1;
+      const dSolar = Math.round((mix.solar / tCap) * 100);
+      const dWind = Math.round((mix.wind / tCap) * 100);
+      const dHydro = Math.round((mix.hydro / tCap) * 100);
+      const dBio = Math.round((mix.biomass / tCap) * 100);
 
-  const grid = document.getElementById('projects-grid');
-  grid.innerHTML = '';
-
-  filtered.forEach(p => {
-    const usePct = Math.round((p.usage/p.capacity)*100);
-    const div = document.createElement('div');
-    div.className = `proj-card ${p.type}`;
-    let btns = '';
-    
-    // UI Logic: Invest only for community leader
-    if(userRole === 'community_leader' || userRole === 'community leader') {
-      if (p.status === 'active') {
-        btns += `<button class="btn-proj btn-invest" onclick="investProject('${p.id}', '${p.name.replace(/'/g, "&apos;")}', '${p.type}', ${p.capacity*p.price})">Invest</button>`;
-      } else {
-        btns += `<button class="btn-proj btn-edit" style="cursor: not-allowed; opacity: 0.5;" onclick="alert('Investment is not allowed for inactive projects.')">Invest</button>`;
+      if (donutChart) {
+        donutChart.data.datasets[0].data = [dSolar, dWind, dHydro, dBio];
+        donutChart.update();
       }
-    }
-    // UI Logic: Edit/Delete only for provider of their own project, or admin
-    const canEdit = (userRole === 'energy_provider' || userRole === 'energy provider') && (p.createdBy === user.id);
-    const isAdmin = userRole.includes('admin');
-    if(canEdit || isAdmin) {
-      btns += `<button class="btn-proj btn-edit" onclick="openEdit('${p.id}')">Edit</button>
-               <button class="btn-proj btn-delete" onclick="deleteProject('${p.id}')">✕</button>`;
+
+      // Smart Sync for Legend UI
+      const els = { solar: dSolar, wind: dWind, hydro: dHydro, biomass: dBio };
+      for (const [k, v] of Object.entries(els)) {
+        const el = document.getElementById('legend-' + k);
+        if (el) el.textContent = v + '%';
+      }
+
+      // Smart Sync for Line Chart mathematically based on live MongoDB total
+      if (totalGen > 0 || totalUse > 0) {
+        const cGen = [0.15, 0.25, 0.40, 0.35, 0.25, 0.15, 0.10];
+        const cUse = [0.10, 0.20, 0.30, 0.28, 0.20, 0.12, 0.08];
+        const sCGen = cGen.reduce((a, b) => a + b, 0);
+        const sCUse = cUse.reduce((a, b) => a + b, 0);
+
+        // Scale live totals over week
+        weekData.gen = cGen.map(v => Math.round((v / sCGen) * totalGen));
+        weekData.use = cUse.map(v => Math.round((v / sCUse) * totalUse));
+        // Propose month/year proportional scales
+        monthData.gen = weekData.gen.slice(0, 4).map(v => v * 4);
+        monthData.use = weekData.use.slice(0, 4).map(v => v * 4);
+        yearData.gen = new Array(12).fill(0).map((_, i) => Math.round(totalGen * 4 * (1 + Math.sin(i) / 4)));
+        yearData.use = new Array(12).fill(0).map((_, i) => Math.round(totalUse * 4 * (1 + Math.sin(i) / 4)));
+      }
+
+      if (typeof updateChart === 'function') updateChart();
+
+      const fc = document.getElementById('footerCount');
+      if (fc) fc.textContent = projects.length;
+      const fa = document.getElementById('footerActive');
+      if (fa) fa.textContent = projects.filter(p => p.status === 'active').length;
     }
 
-    div.innerHTML = `
+    const typeIcons = { solar: '☀️', wind: '💨', hydro: '💧', biomass: '🌾' };
+    const typeColors = { solar: '#f59e0b', wind: '#06b6d4', hydro: '#3b82f6', biomass: '#22c55e' };
+
+    function renderProjects() {
+      const tf = document.getElementById('filter-type').value;
+      const sf = document.getElementById('filter-status').value;
+      const filtered = projects.filter(p => (!tf || p.type === tf) && (!sf || p.status === sf));
+
+      const grid = document.getElementById('projects-grid');
+      grid.innerHTML = '';
+
+      filtered.forEach(p => {
+        const usePct = Math.round((p.usage / p.capacity) * 100);
+        const div = document.createElement('div');
+        div.className = `proj-card ${p.type}`;
+        let btns = '';
+
+        // UI Logic: Invest only for community leader
+        if (userRole === 'community_leader' || userRole === 'community leader') {
+          if (p.status === 'active') {
+            btns += `<button class="btn-proj btn-invest" onclick="investProject('${p.id}', '${p.name.replace(/'/g, "&apos;")}', '${p.type}', ${p.capacity * p.price})">Invest</button>`;
+          } else {
+            btns += `<button class="btn-proj btn-edit" style="cursor: not-allowed; opacity: 0.5;" onclick="alert('Investment is not allowed for inactive projects.')">Invest</button>`;
+          }
+        }
+        // UI Logic: Edit/Delete only for provider of their own project, or admin
+        const canEdit = (userRole === 'energy_provider' || userRole === 'energy provider') && (p.createdBy === user.id);
+        const isAdmin = userRole.includes('admin');
+        if (canEdit || isAdmin) {
+          btns += `<button class="btn-proj btn-edit" onclick="openEdit('${p.id}')">Edit</button>
+               <button class="btn-proj btn-delete" onclick="deleteProject('${p.id}')">✕</button>`;
+        }
+
+        div.innerHTML = `
       <div class="proj-top">
         <div>
-          <div class="proj-name">${typeIcons[p.type]||'⚡'} ${p.name}</div>
+          <div class="proj-name">${typeIcons[p.type] || '⚡'} ${p.name}</div>
           <div class="proj-location">📍 ${p.location}</div>
         </div>
         <span class="type-badge ${p.type}">${p.type}</span>
@@ -666,7 +448,7 @@ function renderProjects() {
       </div>
       <div class="proj-capacity-bar">
         <div class="proj-capacity-label"><span>Usage Load</span><span>${usePct}%</span></div>
-        <div class="cap-bar"><div class="cap-fill" style="width:${usePct}%;background:${typeColors[p.type]||'#fff'};"></div></div>
+        <div class="cap-bar"><div class="cap-fill" style="width:${usePct}%;background:${typeColors[p.type] || '#fff'};"></div></div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <span class="status-badge ${p.status}"><div class="status-dot ${p.status}"></div>${p.status}</span>
@@ -674,242 +456,246 @@ function renderProjects() {
       </div>
       <div class="proj-actions">${btns}</div>
     `;
-    grid.appendChild(div);
-  });
+        grid.appendChild(div);
+      });
 
-  document.getElementById('projCount').textContent = `(${filtered.length} projects)`;
-  updateStats();
-}
-
-// Duplicate removed
-
-// ── Charts ──
-const weekData = {
-  labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
-  gen:[3500,5500,9500,8500,6500,4500,3800],
-  use:[2000,3200,4800,3500,2900,2200,1800]
-};
-const monthData = {
-  labels:['W1','W2','W3','W4'],
-  gen:[22000,31000,28000,35000],
-  use:[15000,19000,17000,22000]
-};
-const yearData = {
-  labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-  gen:[80000,75000,90000,95000,110000,120000,115000,108000,98000,92000,85000,88000],
-  use:[55000,52000,60000,65000,72000,78000,74000,70000,64000,60000,55000,58000]
-};
-
-let currentChartData = weekData;
-let lineChart, donutChart;
-
-function buildLineChart(){
-  const c = document.getElementById('energy-chart').getContext('2d');
-  lineChart = new Chart(c, {
-    type:'line',
-    data:{
-      labels: currentChartData.labels,
-      datasets:[
-        { label:'Generation (kWh)', data:currentChartData.gen, borderColor:'#22d3a5', backgroundColor:'rgba(34,211,165,0.06)', borderWidth:2.5, tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#22d3a5', pointBorderColor:'#052e2b', pointBorderWidth:2 },
-        { label:'Usage (kWh)', data:currentChartData.use, borderColor:'#67e8f9', backgroundColor:'rgba(103,232,249,0.04)', borderWidth:2.5, tension:0.4, fill:true, pointRadius:4, pointBackgroundColor:'#67e8f9', pointBorderColor:'#052e2b', pointBorderWidth:2 }
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:true,
-      plugins:{
-        legend:{ labels:{ color:'#94a3b8', font:{size:12}, boxWidth:12, padding:16 } },
-        tooltip:{ backgroundColor:'rgba(5, 46, 43,0.95)', titleColor:'#e2e8f0', bodyColor:'#94a3b8', borderColor:'rgba(34,211,165,0.3)', borderWidth:1, padding:12 }
-      },
-      scales:{
-        y:{ beginAtZero:true, ticks:{color:'#475569',font:{size:11}}, grid:{color:'rgba(51,65,85,0.15)'} },
-        x:{ ticks:{color:'#475569',font:{size:11}}, grid:{color:'rgba(51,65,85,0.08)'} }
-      }
+      document.getElementById('projCount').textContent = `(${filtered.length} projects)`;
+      updateStats();
     }
-  });
-}
 
-function buildDonutChart(){
-  const c = document.getElementById('donut-chart').getContext('2d');
-  donutChart = new Chart(c,{
-    type:'doughnut',
-    data:{
-      labels:['Solar','Wind','Hydro','Biomass'],
-      datasets:[{ data:[42,31,18,9], backgroundColor:['#f59e0b','#06b6d4','#3b82f6','#22c55e'], borderWidth:0, hoverOffset:6 }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:true,
-      cutout:'70%',
-      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'rgba(5, 46, 43,0.95)', titleColor:'#e2e8f0', bodyColor:'#94a3b8', borderColor:'rgba(34,211,165,0.3)', borderWidth:1 } }
+    // Duplicate removed
+
+    // ── Charts ──
+    const weekData = {
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      gen: [3500, 5500, 9500, 8500, 6500, 4500, 3800],
+      use: [2000, 3200, 4800, 3500, 2900, 2200, 1800]
+    };
+    const monthData = {
+      labels: ['W1', 'W2', 'W3', 'W4'],
+      gen: [22000, 31000, 28000, 35000],
+      use: [15000, 19000, 17000, 22000]
+    };
+    const yearData = {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      gen: [80000, 75000, 90000, 95000, 110000, 120000, 115000, 108000, 98000, 92000, 85000, 88000],
+      use: [55000, 52000, 60000, 65000, 72000, 78000, 74000, 70000, 64000, 60000, 55000, 58000]
+    };
+
+    let currentChartData = weekData;
+    let lineChart, donutChart;
+
+    function buildLineChart() {
+      const c = document.getElementById('energy-chart').getContext('2d');
+      lineChart = new Chart(c, {
+        type: 'line',
+        data: {
+          labels: currentChartData.labels,
+          datasets: [
+            { label: 'Generation (kWh)', data: currentChartData.gen, borderColor: '#22d3a5', backgroundColor: 'rgba(34,211,165,0.06)', borderWidth: 2.5, tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#22d3a5', pointBorderColor: '#052e2b', pointBorderWidth: 2 },
+            { label: 'Usage (kWh)', data: currentChartData.use, borderColor: '#67e8f9', backgroundColor: 'rgba(103,232,249,0.04)', borderWidth: 2.5, tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#67e8f9', pointBorderColor: '#052e2b', pointBorderWidth: 2 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 12 }, boxWidth: 12, padding: 16 } },
+            tooltip: { backgroundColor: 'rgba(5, 46, 43,0.95)', titleColor: '#e2e8f0', bodyColor: '#94a3b8', borderColor: 'rgba(34,211,165,0.3)', borderWidth: 1, padding: 12 }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { color: '#475569', font: { size: 11 } }, grid: { color: 'rgba(51,65,85,0.15)' } },
+            x: { ticks: { color: '#475569', font: { size: 11 } }, grid: { color: 'rgba(51,65,85,0.08)' } }
+          }
+        }
+      });
     }
-  });
-}
 
-function switchChart(period, el){
-  document.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  const map = { week:weekData, month:monthData, year:yearData };
-  currentChartData = map[period];
-  lineChart.data.labels = currentChartData.labels;
-  lineChart.data.datasets[0].data = currentChartData.gen;
-  lineChart.data.datasets[1].data = currentChartData.use;
-  lineChart.update();
-}
+    function buildDonutChart() {
+      const c = document.getElementById('donut-chart').getContext('2d');
+      donutChart = new Chart(c, {
+        type: 'doughnut',
+        data: {
+          labels: ['Solar', 'Wind', 'Hydro', 'Biomass'],
+          datasets: [{ data: [42, 31, 18, 9], backgroundColor: ['#f59e0b', '#06b6d4', '#3b82f6', '#22c55e'], borderWidth: 0, hoverOffset: 6 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          cutout: '70%',
+          plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(5, 46, 43,0.95)', titleColor: '#e2e8f0', bodyColor: '#94a3b8', borderColor: 'rgba(34,211,165,0.3)', borderWidth: 1 } }
+        }
+      });
+    }
 
-function updateChart(){
-  if(!lineChart) return;
-  lineChart.update();
-}
+    function switchChart(period, el) {
+      document.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const map = { week: weekData, month: monthData, year: yearData };
+      currentChartData = map[period];
+      lineChart.data.labels = currentChartData.labels;
+      lineChart.data.datasets[0].data = currentChartData.gen;
+      lineChart.data.datasets[1].data = currentChartData.use;
+      lineChart.update();
+    }
 
-// ── Modal ──
-function openModal(type){ document.getElementById(type+'Modal').classList.add('open'); }
-function closeModal(type){ document.getElementById(type+'Modal').classList.remove('open'); }
+    function updateChart() {
+      if (!lineChart) return;
+      lineChart.data.labels = currentChartData.labels;
+      lineChart.data.datasets[0].data = currentChartData.gen;
+      lineChart.data.datasets[1].data = currentChartData.use;
+      lineChart.update();
+    }
 
-async function addProject() {
-  const payload = {
-    name: document.getElementById('p-name').value.trim(),
-    energyType: document.getElementById('p-type').value,
-    locationId: document.getElementById('p-location').value.trim() || 'LOC001',
-    capacityKW: parseFloat(document.getElementById('p-capacity').value),
-    pricePerKWh: parseFloat(document.getElementById('p-price').value),
-    createdBy: user.id
-  };
-  try {
-    const res = await fetch('/api/projects', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    // ── Modal ──
+    function openModal(type) { document.getElementById(type + 'Modal').classList.add('open'); }
+    function closeModal(type) { document.getElementById(type + 'Modal').classList.remove('open'); }
+
+    async function addProject() {
+      const payload = {
+        name: document.getElementById('p-name').value.trim(),
+        energyType: document.getElementById('p-type').value,
+        locationId: document.getElementById('p-location').value.trim() || 'LOC001',
+        capacityKW: parseFloat(document.getElementById('p-capacity').value),
+        pricePerKWh: parseFloat(document.getElementById('p-price').value),
+        createdBy: user.id
+      };
+      try {
+        const res = await fetch('/api/projects', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          closeModal('add');
+          fetchProjects();
+          showToast('Project created successfully!');
+        }
+      } catch (e) { console.error(e); showToast('Error adding project'); }
+    }
+
+    function openEdit(id) {
+      const p = projects.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('edit-p-id').value = id;
+      document.getElementById('edit-p-name').value = p.name;
+      document.getElementById('edit-p-type').value = p.type;
+      document.getElementById('edit-p-status').value = p.status;
+      document.getElementById('edit-p-capacity').value = p.capacity;
+      document.getElementById('edit-p-price').value = p.price;
+      openModal('edit');
+    }
+
+    async function saveEdit() {
+      const id = document.getElementById('edit-p-id').value;
+      const payload = {
+        name: document.getElementById('edit-p-name').value,
+        energyType: document.getElementById('edit-p-type').value,
+        status: document.getElementById('edit-p-status').value,
+        capacityKW: parseFloat(document.getElementById('edit-p-capacity').value),
+        pricePerKWh: parseFloat(document.getElementById('edit-p-price').value)
+      };
+      try {
+        const res = await fetch('/api/projects/' + id, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          closeModal('edit');
+          fetchProjects();
+          showToast('Project updated!');
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    async function deleteProject(id) {
+      if (!confirm('Delete this project?')) return;
+      try {
+        await fetch('/api/projects/' + id, { method: 'DELETE' });
+        fetchProjects();
+        showToast('Project removed');
+      } catch (e) { console.error(e); }
+    }
+
+    // ── Toast ──
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ── Light/Dark Toggle ──
+    let isLight = false;
+    document.getElementById('toggle-bg-btn').addEventListener('click', () => {
+      isLight = !isLight;
+      if (isLight) document.body.classList.add('light-mode'); else document.body.classList.remove('light-mode');
+      document.getElementById('toggle-bg-btn').textContent = isLight ? '🌙 Dark' : '☀️ Light';
     });
-    if(res.ok) {
-      closeModal('add');
-      fetchProjects();
-      showToast('Project created successfully!');
-    }
-  } catch(e) { console.error(e); showToast('Error adding project'); }
-}
 
-function openEdit(id) {
-  const p = projects.find(x => x.id === id);
-  if(!p) return;
-  document.getElementById('edit-p-id').value = id;
-  document.getElementById('edit-p-name').value = p.name;
-  document.getElementById('edit-p-type').value = p.type;
-  document.getElementById('edit-p-status').value = p.status;
-  document.getElementById('edit-p-capacity').value = p.capacity;
-  document.getElementById('edit-p-price').value = p.price;
-  openModal('edit');
-}
-
-async function saveEdit() {
-  const id = document.getElementById('edit-p-id').value;
-  const payload = {
-    name: document.getElementById('edit-p-name').value,
-    energyType: document.getElementById('edit-p-type').value,
-    status: document.getElementById('edit-p-status').value,
-    capacityKW: parseFloat(document.getElementById('edit-p-capacity').value),
-    pricePerKWh: parseFloat(document.getElementById('edit-p-price').value)
-  };
-  try {
-    const res = await fetch('/api/projects/'+id, {
-      method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    // ── Logout ──
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      showToast('Logging out...');
+      setTimeout(() => window.location.href = 'login.html', 1200);
     });
-    if(res.ok) {
-      closeModal('edit');
-      fetchProjects();
-      showToast('Project updated!');
+
+    // ── Live clock ──
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('lastUpdated').textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
-  } catch(e) { console.error(e); }
-}
+    setInterval(updateTime, 1000); updateTime();
 
-async function deleteProject(id) {
-  if(!confirm('Delete this project?')) return;
-  try {
-    await fetch('/api/projects/'+id, { method:'DELETE' });
-    fetchProjects();
-    showToast('Project removed');
-  } catch(e) { console.error(e); }
-}
-
-// ── Toast ──
-function showToast(msg){
-  const t = document.getElementById('toast');
-  document.getElementById('toastMsg').textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3000);
-}
-
-// ── Light/Dark Toggle ──
-let isLight = false;
-document.getElementById('toggle-bg-btn').addEventListener('click',()=>{
-  isLight = !isLight;
-  if(isLight) document.body.classList.add('light-mode'); else document.body.classList.remove('light-mode');
-  document.getElementById('toggle-bg-btn').textContent = isLight?'🌙 Dark':'☀️ Light';
-});
-
-// ── Logout ──
-document.getElementById('logout-btn').addEventListener('click',()=>{
-  showToast('Logging out...');
-  setTimeout(()=>window.location.href='login.html',1200);
-});
-
-// ── Live clock ──
-function updateTime(){
-  const now = new Date();
-  document.getElementById('lastUpdated').textContent = now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
-setInterval(updateTime,1000); updateTime();
-
-// ── Load user from session ──
-const user = JSON.parse(sessionStorage.getItem('ecoUser')||'{}');
-const userName = user.name||'Guest User';
-const userRole = user.role||'viewer';
-document.getElementById('welcome-user').textContent = userName;
-document.getElementById('welcome-role').textContent = userRole;
-document.getElementById('user-info').textContent = userName;
-document.getElementById('userAvatar').textContent = userName.charAt(0).toUpperCase();
-if(userRole === 'energy_provider' || userRole === 'energy provider' || userRole.includes('admin')){
-  document.getElementById('add-project-btn').style.display = 'block';
-}
-if(userRole === 'community_leader' || userRole === 'community leader'){
-  document.getElementById('tab-btn-hist').style.display = 'inline-block';
-  loadHistory();
-}
+    // ── Load user from session ──
+    const user = JSON.parse(sessionStorage.getItem('ecoUser') || '{}');
+    const userName = user.name || 'Guest User';
+    const userRole = user.role || 'viewer';
+    document.getElementById('welcome-user').textContent = userName;
+    document.getElementById('welcome-role').textContent = userRole;
+    document.getElementById('user-info').textContent = userName;
+    document.getElementById('userAvatar').textContent = userName.charAt(0).toUpperCase();
+    if (userRole === 'energy_provider' || userRole === 'energy provider' || userRole.includes('admin')) {
+      document.getElementById('add-project-btn').style.display = 'block';
+    }
+    if (userRole === 'community_leader' || userRole === 'community leader') {
+      document.getElementById('tab-btn-hist').style.display = 'inline-block';
+      loadHistory();
+    }
 
 
-function switchTab(tab) {
-  document.getElementById('view-dash').style.display = tab==='dash'?'block':'none';
-  document.getElementById('view-proj').style.display = tab==='proj'?'block':'none';
-  document.getElementById('view-hist').style.display = tab==='hist'?'block':'none';
-  document.querySelectorAll('#tab-btn-dash, #tab-btn-proj, #tab-btn-hist').forEach(b => { b.style.background='rgba(100,116,139,0.2)'; b.style.color='#94a3b8'; });
-  const activeBtn = document.getElementById('tab-btn-'+tab);
-  if(activeBtn) { activeBtn.style.background='rgba(34,211,165,0.2)'; activeBtn.style.color='#22d3a5'; }
-}
+    function switchTab(tab) {
+      document.getElementById('view-dash').style.display = tab === 'dash' ? 'block' : 'none';
+      document.getElementById('view-proj').style.display = tab === 'proj' ? 'block' : 'none';
+      document.getElementById('view-hist').style.display = tab === 'hist' ? 'block' : 'none';
+      document.querySelectorAll('#tab-btn-dash, #tab-btn-proj, #tab-btn-hist').forEach(b => { b.style.background = 'rgba(100,116,139,0.2)'; b.style.color = '#94a3b8'; });
+      const activeBtn = document.getElementById('tab-btn-' + tab);
+      if (activeBtn) { activeBtn.style.background = 'rgba(34,211,165,0.2)'; activeBtn.style.color = '#22d3a5'; }
+    }
 
-function investProject(id, name, type, amount) {
-  sessionStorage.setItem('buy_intent', JSON.stringify({ id, name, type, amount }));
-  window.location.href = 'payment.html';
-}
+    function investProject(id, name, type, amount) {
+      sessionStorage.setItem('buy_intent', JSON.stringify({ id, name, type, amount }));
+      window.location.href = 'payment.html';
+    }
 
-async function loadHistory() {
-  try {
-    const res = await fetch('/api/transactions?buyerId='+user.id);
-    const data = await res.json();
-    const grid = document.getElementById('history-grid');
-    grid.innerHTML = '';
-    data.forEach(t => {
-      const pName = t.projectId ? t.projectId.name : 'Unknown Project';
-      const pType = t.projectId ? t.projectId.energyType : 'unknown';
-      grid.innerHTML += `<div class="proj-card ${pType}">
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/transactions?buyerId=' + user.id);
+        const data = await res.json();
+        const grid = document.getElementById('history-grid');
+        grid.innerHTML = '';
+        data.forEach(t => {
+          const pName = t.projectId ? t.projectId.name : 'Unknown Project';
+          const pType = t.projectId ? t.projectId.energyType : 'unknown';
+          grid.innerHTML += `<div class="proj-card ${pType}">
         <div class="proj-name">Payment for ${pName}</div>
         <div class="proj-stat-val" style="margin-top:10px;">₹${t.amountINR.toLocaleString()}</div>
         <div style="margin-top:10px;font-size:11px;color:#94a3b8;">${new Date(t.date).toLocaleString()}</div>
       </div>`;
-    });
-  } catch(e) { console.error(e); }
-}
+        });
+      } catch (e) { console.error(e); }
+    }
 
 
-// ── Init ──
-buildLineChart();
-buildDonutChart();
-fetchProjects();
-</script>
+    // ── Init ──
+    buildLineChart();
+    buildDonutChart();
+    fetchProjects();
+  </script>
 </body>
+
 </html>

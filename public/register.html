@@ -470,7 +470,7 @@
     document.getElementById('step'+n).classList.add('active');
     currentStep=n; updateStepper(n);
   }
-  function nextStep(from, e){
+  async function nextStep(from, e){
     // ripple
     const btn=e.currentTarget;
     const r=document.createElement('span'); r.className='ripple';
@@ -479,12 +479,29 @@
     btn.appendChild(r); setTimeout(()=>r.remove(),700);
     
     if(from === 3) {
-      const mockOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      alert("Since email sending is not configured, your simulated OTP is: " + mockOtp);
-      setTimeout(() => {
-        const boxes = document.querySelectorAll('.otp-box');
-        boxes.forEach((box, i) => { box.value = mockOtp[i]; });
-      }, 500);
+      const email = document.getElementById('email').value;
+      if (!email) {
+        alert("Please enter your email in Step 1 before proceeding.");
+        return;
+      }
+      btn.textContent='Sending OTP...'; btn.style.pointerEvents='none';
+      try {
+        const res = await fetch('/api/auth/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        btn.textContent='Continue →'; btn.style.pointerEvents='auto';
+        if (!res.ok) {
+          alert(data.error || 'Failed to send OTP.');
+          return;
+        }
+      } catch (err) {
+        btn.textContent='Continue →'; btn.style.pointerEvents='auto';
+        alert('Network error while sending OTP.');
+        return;
+      }
     }
     
     if(from<4) showStep(from+1);
@@ -534,7 +551,20 @@
   });
 
   // Resend OTP timer
-  function resendOtp(){
+  async function resendOtp(){
+    const email = document.getElementById('email').value;
+    if (!email) return alert('Email missing');
+    try {
+      await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      alert('OTP resent to your email.');
+    } catch(err) {
+      alert('Failed to resend OTP.');
+    }
+
     let secs=30;
     const el=document.getElementById('resendTimer');
     el.textContent='('+secs+'s)';
@@ -566,13 +596,19 @@
        else if (lbl.includes('Admin')) role = 'system_admin';
     }
 
+    const otpBoxes = document.querySelectorAll('.otp-box');
+    let otp = '';
+    otpBoxes.forEach(box => otp += box.value);
+
+    if (otp.length !== 6) { alert('Please enter the complete 6-digit OTP'); return; }
+
     btn.textContent='Creating account...'; btn.style.opacity='0.7'; btn.style.pointerEvents='none';
 
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: fname + ' ' + lname, email, phone, password, location, role })
+        body: JSON.stringify({ name: fname + ' ' + lname, email, phone, password, location, role, otp })
       });
       const data = await res.json();
       if (res.ok) {
