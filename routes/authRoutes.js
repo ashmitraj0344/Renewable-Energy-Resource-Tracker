@@ -86,8 +86,14 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     
-    const count = await User.countDocuments();
-    const _id = `USR${String(count + 1).padStart(3, '0')}`;
+    const lastUser = await User.findOne().sort({ _id: -1 });
+    let nextCount = 1;
+    if (lastUser && lastUser._id && lastUser._id.startsWith('USR')) {
+      nextCount = parseInt(lastUser._id.replace('USR', ''), 10) + 1;
+    } else {
+      nextCount = (await User.countDocuments()) + 1;
+    }
+    const _id = `USR${String(nextCount).padStart(3, '0')}`;
 
     const newUser = new User({
       _id, name, email, password: hashedPassword, role, phone, location, isVerified: true

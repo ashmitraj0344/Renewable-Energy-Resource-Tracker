@@ -24,8 +24,14 @@ router.post('/', async (req, res) => {
   const { name, energyType, locationId, createdBy, capacityKW, pricePerKWh } = req.body;
   
   try {
-    const count = await Project.countDocuments();
-    const _id = `PRJ${String(count + 1).padStart(3, '0')}`;
+    const lastProject = await Project.findOne().sort({ _id: -1 });
+    let nextCount = 1;
+    if (lastProject && lastProject._id && lastProject._id.startsWith('PRJ')) {
+      nextCount = parseInt(lastProject._id.replace('PRJ', ''), 10) + 1;
+    } else {
+      nextCount = (await Project.countDocuments()) + 1;
+    }
+    const _id = `PRJ${String(nextCount).padStart(3, '0')}`;
 
     const newProject = new Project({
       _id,
